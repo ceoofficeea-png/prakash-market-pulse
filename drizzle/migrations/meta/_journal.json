@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1793356300827,
+      "tag": "0000_auth_profiles_roles",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793356360908,
+      "tag": "0001_marketing_core_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793356447640,
+      "tag": "0002_seed_reference_data",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793356588648,
+      "tag": "0003_seed_module_data",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793356634001,
+      "tag": "0004_fix_seed_variety",
+      "breakpoints": true
+    }
+  ]
+}
