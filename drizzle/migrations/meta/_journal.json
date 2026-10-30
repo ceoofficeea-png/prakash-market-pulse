@@ -29,6 +29,13 @@
       "when": 1793356588648,
       "tag": "0003_seed_module_data",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793356634001,
+      "tag": "0004_fix_seed_variety",
+      "breakpoints": true
     }
   ]
 }
