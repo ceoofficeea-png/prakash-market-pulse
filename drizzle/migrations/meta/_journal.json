@@ -15,6 +15,13 @@
       "when": 1793356360908,
       "tag": "0001_marketing_core_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793356447640,
+      "tag": "0002_seed_reference_data",
+      "breakpoints": true
     }
   ]
 }
