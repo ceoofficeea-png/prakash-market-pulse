@@ -48,9 +48,9 @@ export function AppTopbar() {
   };
 
   const name = me.data?.profile?.full_name || me.data?.email || "";
-  const go = (to: string) => {
+  const go = (fn: () => void) => {
     setOpen(false);
-    navigate({ to });
+    fn();
   };
 
   return (
@@ -104,28 +104,28 @@ export function AppTopbar() {
           <CommandEmpty>Nothing found.</CommandEmpty>
           <CommandGroup heading="Modules">
             {NAV.flatMap((g) => g.items).map((i) => (
-              <CommandItem key={i.url} onSelect={() => go(i.url)}>
+              <CommandItem key={i.url} onSelect={() => go(() => navigate({ to: i.url }))}>
                 <i.icon /> {i.title}
               </CommandItem>
             ))}
           </CommandGroup>
           <CommandGroup heading="Campaigns">
             {campaigns.map((c) => (
-              <CommandItem key={c.id} value={`campaign ${c.name} ${c.code}`} onSelect={() => go(`/campaigns/${c.id}`)}>
+              <CommandItem key={c.id} value={`campaign ${c.name} ${c.code}`} onSelect={() => go(() => navigate({ to: "/campaigns/$id", params: { id: String(c.id) } }))}>
                 {c.name}
               </CommandItem>
             ))}
           </CommandGroup>
           <CommandGroup heading="Markets">
             {countries.map((c) => (
-              <CommandItem key={c.code} value={`market ${c.name}`} onSelect={() => go(`/markets/${c.code}`)}>
+              <CommandItem key={c.code} value={`market ${c.name}`} onSelect={() => go(() => navigate({ to: "/markets/$code", params: { code: c.code } }))}>
                 {c.flag} {c.name}
               </CommandItem>
             ))}
           </CommandGroup>
           <CommandGroup heading="Team">
             {team.map((m) => (
-              <CommandItem key={m.id} value={`team ${m.name}`} onSelect={() => go(`/team/${m.id}`)}>
+              <CommandItem key={m.id} value={`team ${m.name}`} onSelect={() => go(() => navigate({ to: "/team/$id", params: { id: String(m.id) } }))}>
                 {m.name} <span className="text-xs text-muted-foreground">· {m.title}</span>
               </CommandItem>
             ))}

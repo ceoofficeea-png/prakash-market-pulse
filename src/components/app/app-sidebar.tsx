@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, type LinkProps } from "@tanstack/react-router";
 import {
   BarChart3,
   Bot,
@@ -35,9 +35,9 @@ import { can } from "@/lib/permissions";
 
 interface NavItem {
   title: string;
-  url: string;
+  url: NonNullable<LinkProps["to"]>;
   icon: LucideIcon;
-  adminOnly?: boolean;
+  adminOnly?: boolean | undefined;
 }
 
 export const NAV: { label: string; items: NavItem[] }[] = [

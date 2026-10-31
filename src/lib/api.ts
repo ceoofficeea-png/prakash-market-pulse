@@ -89,26 +89,31 @@ export function useLookups() {
 
 /* ---------- Aggregations ---------- */
 interface MetricsOpts {
-  from?: string;
-  to?: string;
-  countries?: string[];
-  platforms?: string[];
-  campaigns?: number[];
-  ignoreFilters?: boolean;
+  from?: string | undefined;
+  to?: string | undefined;
+  countries?: string[] | undefined;
+  platforms?: string[] | undefined;
+  campaigns?: number[] | undefined;
+  ignoreFilters?: boolean | undefined;
 }
 
 const arr = <T,>(a?: T[]) => (a && a.length ? a : undefined);
 
+/** Drop undefined keys so optional RPC args are simply omitted. */
+function clean<T extends object>(o: T) {
+  return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as { [K in keyof T]: Exclude<T[K], undefined> };
+}
+
 export function useMetrics(dim: string, opts: MetricsOpts = {}) {
   const f = useFilters();
-  const params = {
+  const params = clean({
     p_dim: dim,
     p_from: opts.from ?? f.from,
     p_to: opts.to ?? f.to,
     p_countries: arr(opts.countries ?? (opts.ignoreFilters ? [] : f.countries)),
     p_platforms: arr(opts.platforms ?? (opts.ignoreFilters ? [] : f.platforms)),
     p_campaigns: arr(opts.campaigns ?? (opts.ignoreFilters ? [] : f.campaigns)),
-  };
+  });
   return useQuery({
     queryKey: ["metrics", params],
     placeholderData: keepPreviousData,
@@ -116,15 +121,15 @@ export function useMetrics(dim: string, opts: MetricsOpts = {}) {
   });
 }
 
-export function useWeb(dim: string, opts: { from?: string; to?: string; countries?: string[]; sources?: string[] } = {}) {
+export function useWeb(dim: string, opts: { from?: string | undefined; to?: string | undefined; countries?: string[] | undefined; sources?: string[] | undefined } = {}) {
   const f = useFilters();
-  const params = {
+  const params = clean({
     p_dim: dim,
     p_from: opts.from ?? f.from,
     p_to: opts.to ?? f.to,
     p_countries: arr(opts.countries ?? f.countries),
     p_sources: arr(opts.sources),
-  };
+  });
   return useQuery({
     queryKey: ["web", params],
     placeholderData: keepPreviousData,
@@ -132,15 +137,15 @@ export function useWeb(dim: string, opts: { from?: string; to?: string; countrie
   });
 }
 
-export function useSocial(dim: string, opts: { from?: string; to?: string; platforms?: string[]; countries?: string[] } = {}) {
+export function useSocial(dim: string, opts: { from?: string | undefined; to?: string | undefined; platforms?: string[] | undefined; countries?: string[] | undefined } = {}) {
   const f = useFilters();
-  const params = {
+  const params = clean({
     p_dim: dim,
     p_from: opts.from ?? f.from,
     p_to: opts.to ?? f.to,
     p_platforms: arr(opts.platforms),
     p_countries: arr(opts.countries),
-  };
+  });
   return useQuery({
     queryKey: ["social", params],
     placeholderData: keepPreviousData,

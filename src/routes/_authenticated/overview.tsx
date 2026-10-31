@@ -9,14 +9,13 @@ import { DemoNote, KpiGrid, PageHeader } from "@/components/app/page";
 import { StatusBadge } from "@/components/app/status-badge";
 import { totals, useInsights, useLeads, useLookups, useMetrics, useWeb } from "@/lib/api";
 import { inRange, useFilters } from "@/lib/filters";
-import { fmtCompact, fmtNum, fmtPct, fmtUsd, LEAD_STAGES, pctChange, platformColor, platformLabel, safeDiv } from "@/lib/format";
+import { fmtCompact, fmtNum, grainFor, fmtPct, fmtUsd, LEAD_STAGES, pctChange, platformColor, platformLabel, safeDiv } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/overview")({
   head: () => ({ meta: [{ title: "Executive Overview — Prakash Pump" }] }),
   component: Overview,
 });
 
-export const grainFor = (days: number) => (days > 92 ? "week" : "date");
 
 function Overview() {
   const f = useFilters();
@@ -130,8 +129,8 @@ function Overview() {
         <ChartCard title="Demand funnel" subtitle="Paid media → CRM">
           <div className="space-y-2.5 pt-1">
             {funnel.map((s, i) => {
-              const w = Math.max(6, (Math.log10(Math.max(1, s.value)) / Math.log10(Math.max(10, funnel[0].value))) * 100);
-              const conv = i > 0 ? safeDiv(s.value, funnel[i - 1].value) : null;
+              const w = Math.max(6, (Math.log10(Math.max(1, s.value)) / Math.log10(Math.max(10, funnel[0]?.value ?? 10))) * 100);
+              const conv = i > 0 ? safeDiv(s.value, funnel[i - 1]?.value ?? 0) : null;
               return (
                 <div key={s.label}>
                   <div className="mb-1 flex justify-between text-xs">

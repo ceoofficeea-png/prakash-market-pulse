@@ -7,14 +7,14 @@ import { cn } from "@/lib/utils";
 interface KpiCardProps {
   label: string;
   value: string;
-  delta?: number | null;
+  delta?: number | null | undefined;
   /** When true a decrease is good (e.g. cost per lead) */
-  invert?: boolean;
-  hint?: string;
-  icon?: LucideIcon;
-  spark?: number[];
-  color?: string;
-  onClick?: () => void;
+  invert?: boolean | undefined;
+  hint?: string | undefined;
+  icon?: LucideIcon | undefined;
+  spark?: number[] | undefined;
+  color?: string | undefined;
+  onClick?: (() => void) | undefined;
 }
 
 export function KpiCard({ label, value, delta, invert, hint, icon: Icon, spark, color = "var(--chart-1)", onClick }: KpiCardProps) {
