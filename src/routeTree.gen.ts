@@ -17,6 +17,8 @@ import { Route as AuthenticatedAdsRouteImport } from './routes/_authenticated/ad
 import { Route as AuthenticatedOverviewRouteImport } from './routes/_authenticated/overview'
 import { Route as AuthenticatedCampaignsIndexRouteImport } from './routes/_authenticated/campaigns.index'
 import { Route as AuthenticatedCampaignsIdRouteImport } from './routes/_authenticated/campaigns.$id'
+import { Route as AuthenticatedContentIndexRouteImport } from './routes/_authenticated/content.index'
+import { Route as AuthenticatedContentIdRouteImport } from './routes/_authenticated/content.$id'
 import { Route as AuthenticatedCrmIndexRouteImport } from './routes/_authenticated/crm.index'
 import { Route as AuthenticatedCrmIdRouteImport } from './routes/_authenticated/crm.$id'
 
@@ -61,6 +63,17 @@ const AuthenticatedCampaignsIdRoute =
     path: '/campaigns/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedContentIndexRoute =
+  AuthenticatedContentIndexRouteImport.update({
+    id: '/content/',
+    path: '/content/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedContentIdRoute = AuthenticatedContentIdRouteImport.update({
+  id: '/content/$id',
+  path: '/content/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCrmIndexRoute = AuthenticatedCrmIndexRouteImport.update({
   id: '/crm/',
   path: '/crm/',
@@ -79,8 +92,10 @@ export interface FileRoutesByFullPath {
   '/ads': typeof AuthenticatedAdsRoute
   '/overview': typeof AuthenticatedOverviewRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
+  '/content/$id': typeof AuthenticatedContentIdRoute
   '/crm/$id': typeof AuthenticatedCrmIdRoute
   '/campaigns/': typeof AuthenticatedCampaignsIndexRoute
+  '/content/': typeof AuthenticatedContentIndexRoute
   '/crm/': typeof AuthenticatedCrmIndexRoute
 }
 export interface FileRoutesByTo {
@@ -90,8 +105,10 @@ export interface FileRoutesByTo {
   '/ads': typeof AuthenticatedAdsRoute
   '/overview': typeof AuthenticatedOverviewRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
+  '/content/$id': typeof AuthenticatedContentIdRoute
   '/crm/$id': typeof AuthenticatedCrmIdRoute
   '/campaigns': typeof AuthenticatedCampaignsIndexRoute
+  '/content': typeof AuthenticatedContentIndexRoute
   '/crm': typeof AuthenticatedCrmIndexRoute
 }
 export interface FileRoutesById {
@@ -103,8 +120,10 @@ export interface FileRoutesById {
   '/_authenticated/ads': typeof AuthenticatedAdsRoute
   '/_authenticated/overview': typeof AuthenticatedOverviewRoute
   '/_authenticated/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
+  '/_authenticated/content/$id': typeof AuthenticatedContentIdRoute
   '/_authenticated/crm/$id': typeof AuthenticatedCrmIdRoute
   '/_authenticated/campaigns/': typeof AuthenticatedCampaignsIndexRoute
+  '/_authenticated/content/': typeof AuthenticatedContentIndexRoute
   '/_authenticated/crm/': typeof AuthenticatedCrmIndexRoute
 }
 export interface FileRouteTypes {
@@ -116,8 +135,10 @@ export interface FileRouteTypes {
     | '/ads'
     | '/overview'
     | '/campaigns/$id'
+    | '/content/$id'
     | '/crm/$id'
     | '/campaigns/'
+    | '/content/'
     | '/crm/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -127,8 +148,10 @@ export interface FileRouteTypes {
     | '/ads'
     | '/overview'
     | '/campaigns/$id'
+    | '/content/$id'
     | '/crm/$id'
     | '/campaigns'
+    | '/content'
     | '/crm'
   id:
     | '__root__'
@@ -139,8 +162,10 @@ export interface FileRouteTypes {
     | '/_authenticated/ads'
     | '/_authenticated/overview'
     | '/_authenticated/campaigns/$id'
+    | '/_authenticated/content/$id'
     | '/_authenticated/crm/$id'
     | '/_authenticated/campaigns/'
+    | '/_authenticated/content/'
     | '/_authenticated/crm/'
   fileRoutesById: FileRoutesById
 }
@@ -209,6 +234,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCampaignsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/content/': {
+      id: '/_authenticated/content/'
+      path: '/content'
+      fullPath: '/content/'
+      preLoaderRoute: typeof AuthenticatedContentIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/content/$id': {
+      id: '/_authenticated/content/$id'
+      path: '/content/$id'
+      fullPath: '/content/$id'
+      preLoaderRoute: typeof AuthenticatedContentIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/crm/': {
       id: '/_authenticated/crm/'
       path: '/crm'
@@ -230,8 +269,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdsRoute: typeof AuthenticatedAdsRoute
   AuthenticatedOverviewRoute: typeof AuthenticatedOverviewRoute
   AuthenticatedCampaignsIdRoute: typeof AuthenticatedCampaignsIdRoute
+  AuthenticatedContentIdRoute: typeof AuthenticatedContentIdRoute
   AuthenticatedCrmIdRoute: typeof AuthenticatedCrmIdRoute
   AuthenticatedCampaignsIndexRoute: typeof AuthenticatedCampaignsIndexRoute
+  AuthenticatedContentIndexRoute: typeof AuthenticatedContentIndexRoute
   AuthenticatedCrmIndexRoute: typeof AuthenticatedCrmIndexRoute
 }
 
@@ -239,8 +280,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdsRoute: AuthenticatedAdsRoute,
   AuthenticatedOverviewRoute: AuthenticatedOverviewRoute,
   AuthenticatedCampaignsIdRoute: AuthenticatedCampaignsIdRoute,
+  AuthenticatedContentIdRoute: AuthenticatedContentIdRoute,
   AuthenticatedCrmIdRoute: AuthenticatedCrmIdRoute,
   AuthenticatedCampaignsIndexRoute: AuthenticatedCampaignsIndexRoute,
+  AuthenticatedContentIndexRoute: AuthenticatedContentIndexRoute,
   AuthenticatedCrmIndexRoute: AuthenticatedCrmIndexRoute,
 }
 
