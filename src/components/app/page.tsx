@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, type LinkProps } from "@tanstack/react-router";
 import { ChevronRight, Lock } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -19,7 +19,7 @@ export function PageHeader({
   description?: string | undefined;
   actions?: ReactNode | undefined;
   filters?: FilterKind[] | undefined;
-  crumbs?: { label: string; to: string }[] | undefined;
+  crumbs?: { label: string; to: NonNullable<LinkProps["to"]> }[] | undefined;
 }) {
   return (
     <div className="mb-5 space-y-4">
