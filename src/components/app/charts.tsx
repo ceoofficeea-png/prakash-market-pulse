@@ -29,10 +29,10 @@ export function ChartCard({
   className,
 }: {
   title: string;
-  subtitle?: string;
-  actions?: ReactNode;
+  subtitle?: string | undefined;
+  actions?: ReactNode | undefined;
   children: ReactNode;
-  className?: string;
+  className?: string | undefined;
 }) {
   return (
     <section className={cn("panel flex flex-col p-4", className)}>
@@ -71,9 +71,9 @@ function ThemedTooltip({ active, payload, label, fmt, labelFmt }: TooltipProps<n
 export interface Series {
   key: string;
   label: string;
-  color?: string;
-  axis?: "left" | "right";
-  type?: "area" | "line" | "bar";
+  color?: string | undefined;
+  axis?: "left" | "right" | undefined;
+  type?: "area" | "line" | "bar" | undefined;
 }
 
 const isDateKey = (v: unknown) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v);
@@ -88,12 +88,12 @@ export function TrendChart({
   stacked,
 }: {
   data: Record<string, unknown>[];
-  xKey?: string;
+  xKey?: string | undefined;
   series: Series[];
-  height?: number;
-  fmt?: Fmt;
-  rightFmt?: Fmt;
-  stacked?: boolean;
+  height?: number | undefined;
+  fmt?: Fmt | undefined;
+  rightFmt?: Fmt | undefined;
+  stacked?: boolean | undefined;
 }) {
   const hasRight = series.some((s) => s.axis === "right");
   const tickFmt = (v: string) => (isDateKey(v) ? fmtShortDate(v) : v);
@@ -165,14 +165,14 @@ export function BarsChart({
   colorByIndex,
 }: {
   data: Record<string, unknown>[];
-  xKey?: string;
+  xKey?: string | undefined;
   series: Series[];
-  height?: number;
-  fmt?: Fmt;
-  horizontal?: boolean;
-  stacked?: boolean;
-  onBarClick?: (row: Record<string, unknown>) => void;
-  colorByIndex?: boolean;
+  height?: number | undefined;
+  fmt?: Fmt | undefined;
+  horizontal?: boolean | undefined;
+  stacked?: boolean | undefined;
+  onBarClick?: (row: Record<string, unknown>) => void | undefined;
+  colorByIndex?: boolean | undefined;
 }) {
   const tickFmt = (v: string) => (isDateKey(v) ? fmtShortDate(v) : v);
   return (
@@ -220,9 +220,9 @@ export function DonutChart({
   onSliceClick,
 }: {
   data: { name: string; value: number; color?: string; id?: string }[];
-  height?: number;
-  fmt?: Fmt;
-  onSliceClick?: (d: { name: string; id?: string }) => void;
+  height?: number | undefined;
+  fmt?: Fmt | undefined;
+  onSliceClick?: (d: { name: string | undefined; id?: string }) => void;
 }) {
   const total = data.reduce((s, d) => s + d.value, 0);
   return (
@@ -281,9 +281,9 @@ export function BarList({
   color = "var(--chart-1)",
 }: {
   items: { id: string; label: ReactNode; value: number; sub?: ReactNode }[];
-  fmt?: Fmt;
-  onSelect?: (id: string) => void;
-  color?: string;
+  fmt?: Fmt | undefined;
+  onSelect?: (id: string) => void | undefined;
+  color?: string | undefined;
 }) {
   const max = Math.max(1, ...items.map((i) => i.value));
   return (

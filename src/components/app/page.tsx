@@ -14,12 +14,12 @@ export function PageHeader({
   filters,
   crumbs,
 }: {
-  eyebrow?: string;
+  eyebrow?: string | undefined;
   title: ReactNode;
-  description?: string;
-  actions?: ReactNode;
-  filters?: FilterKind[];
-  crumbs?: { label: string; to: string }[];
+  description?: string | undefined;
+  actions?: ReactNode | undefined;
+  filters?: FilterKind[] | undefined;
+  crumbs?: { label: string | undefined; to: string }[];
 }) {
   return (
     <div className="mb-5 space-y-4">

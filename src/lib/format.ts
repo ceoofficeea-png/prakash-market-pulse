@@ -64,8 +64,9 @@ export const initials = (name: string) =>
     .toUpperCase();
 
 export function downloadCsv(filename: string, rows: Record<string, unknown>[]) {
-  if (!rows.length) return;
-  const headers = Object.keys(rows[0]);
+  const first = rows[0];
+  if (!first) return;
+  const headers = Object.keys(first);
   const esc = (v: unknown) => {
     const s = v == null ? "" : Array.isArray(v) ? v.join("; ") : String(v);
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
@@ -127,3 +128,6 @@ export const CHART_COLORS = [
   "var(--chart-5)",
   "var(--chart-6)",
 ];
+
+/** Chart time grain: daily up to ~3 months, weekly beyond. */
+export const grainFor = (days: number) => (days > 92 ? "week" : "date");

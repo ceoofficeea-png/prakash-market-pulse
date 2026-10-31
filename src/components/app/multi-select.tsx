@@ -9,8 +9,8 @@ import { cn } from "@/lib/utils";
 export interface Option {
   value: string;
   label: string;
-  icon?: ReactNode;
-  group?: string;
+  icon?: ReactNode | undefined;
+  group?: string | undefined;
 }
 
 export function MultiSelect({
@@ -25,8 +25,8 @@ export function MultiSelect({
   options: Option[];
   value: string[];
   onChange: (v: string[]) => void;
-  icon?: ReactNode;
-  width?: string;
+  icon?: ReactNode | undefined;
+  width?: string | undefined;
 }) {
   const toggle = (v: string) => onChange(value.includes(v) ? value.filter((x) => x !== v) : [...value, v]);
   const summary =

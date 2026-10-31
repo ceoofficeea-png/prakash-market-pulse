@@ -9,27 +9,27 @@ import { cn } from "@/lib/utils";
 export interface Column<T> {
   key: string;
   header: string;
-  cell?: (row: T) => ReactNode;
+  cell?: (row: T) => ReactNode | undefined;
   /** Value used for sorting / CSV export; defaults to row[key] */
   value?: (row: T) => string | number | null | undefined;
-  align?: "left" | "right" | "center";
-  className?: string;
-  sortable?: boolean;
+  align?: "left" | "right" | "center" | undefined;
+  className?: string | undefined;
+  sortable?: boolean | undefined;
 }
 
 interface DataTableProps<T> {
   rows: T[];
   columns: Column<T>[];
   rowKey: (row: T) => string | number;
-  onRowClick?: (row: T) => void;
-  searchKeys?: ((row: T) => string | null | undefined)[];
-  searchPlaceholder?: string;
-  pageSize?: number;
-  exportName?: string;
-  toolbar?: ReactNode;
-  initialSort?: { key: string; dir: "asc" | "desc" };
-  empty?: string;
-  dense?: boolean;
+  onRowClick?: (row: T) => void | undefined;
+  searchKeys?: ((row: T) => string | null | undefined)[] | undefined;
+  searchPlaceholder?: string | undefined;
+  pageSize?: number | undefined;
+  exportName?: string | undefined;
+  toolbar?: ReactNode | undefined;
+  initialSort?: { key: string | undefined; dir: "asc" | "desc" };
+  empty?: string | undefined;
+  dense?: boolean | undefined;
 }
 
 export function DataTable<T>({
