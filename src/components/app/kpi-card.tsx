@@ -14,7 +14,7 @@ interface KpiCardProps {
   icon?: LucideIcon | undefined;
   spark?: number[] | undefined;
   color?: string | undefined;
-  onClick?: () => void | undefined;
+  onClick?: (() => void) | undefined;
 }
 
 export function KpiCard({ label, value, delta, invert, hint, icon: Icon, spark, color = "var(--chart-1)", onClick }: KpiCardProps) {

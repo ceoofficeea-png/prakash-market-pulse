@@ -9,9 +9,9 @@ import { cn } from "@/lib/utils";
 export interface Column<T> {
   key: string;
   header: string;
-  cell?: (row: T) => ReactNode | undefined;
+  cell?: ((row: T) => ReactNode) | undefined;
   /** Value used for sorting / CSV export; defaults to row[key] */
-  value?: (row: T) => string | number | null | undefined;
+  value?: ((row: T) => string | number | null | undefined) | undefined;
   align?: "left" | "right" | "center" | undefined;
   className?: string | undefined;
   sortable?: boolean | undefined;
@@ -21,7 +21,7 @@ interface DataTableProps<T> {
   rows: T[];
   columns: Column<T>[];
   rowKey: (row: T) => string | number;
-  onRowClick?: (row: T) => void | undefined;
+  onRowClick?: ((row: T) => void) | undefined;
   searchKeys?: ((row: T) => string | null | undefined)[] | undefined;
   searchPlaceholder?: string | undefined;
   pageSize?: number | undefined;
