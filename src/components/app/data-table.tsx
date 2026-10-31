@@ -27,7 +27,7 @@ interface DataTableProps<T> {
   pageSize?: number | undefined;
   exportName?: string | undefined;
   toolbar?: ReactNode | undefined;
-  initialSort?: { key: string | undefined; dir: "asc" | "desc" };
+  initialSort?: { key: string; dir: "asc" | "desc" } | undefined;
   empty?: string | undefined;
   dense?: boolean | undefined;
 }

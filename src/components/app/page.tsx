@@ -19,7 +19,7 @@ export function PageHeader({
   description?: string | undefined;
   actions?: ReactNode | undefined;
   filters?: FilterKind[] | undefined;
-  crumbs?: { label: string | undefined; to: string }[];
+  crumbs?: { label: string; to: string }[] | undefined;
 }) {
   return (
     <div className="mb-5 space-y-4">
