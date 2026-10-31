@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Building2, Calendar, FileSignature, Mail, MapPin, MessageSquare, Phone, Presentation, StickyNote, Users } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { ChartCard } from "@/components/app/charts";
@@ -130,7 +130,7 @@ function LeadDetail() {
                   <I className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
                   <div className="min-w-0">
                     <dt className="eyebrow">{k as string}</dt>
-                    <dd className="truncate">{v as React.ReactNode}</dd>
+                    <dd className="truncate">{v as ReactNode}</dd>
                   </div>
                 </div>
               );

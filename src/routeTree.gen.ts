@@ -17,6 +17,8 @@ import { Route as AuthenticatedAdsRouteImport } from './routes/_authenticated/ad
 import { Route as AuthenticatedOverviewRouteImport } from './routes/_authenticated/overview'
 import { Route as AuthenticatedCampaignsIndexRouteImport } from './routes/_authenticated/campaigns.index'
 import { Route as AuthenticatedCampaignsIdRouteImport } from './routes/_authenticated/campaigns.$id'
+import { Route as AuthenticatedCrmIndexRouteImport } from './routes/_authenticated/crm.index'
+import { Route as AuthenticatedCrmIdRouteImport } from './routes/_authenticated/crm.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -59,6 +61,16 @@ const AuthenticatedCampaignsIdRoute =
     path: '/campaigns/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedCrmIndexRoute = AuthenticatedCrmIndexRouteImport.update({
+  id: '/crm/',
+  path: '/crm/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCrmIdRoute = AuthenticatedCrmIdRouteImport.update({
+  id: '/crm/$id',
+  path: '/crm/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -67,7 +79,9 @@ export interface FileRoutesByFullPath {
   '/ads': typeof AuthenticatedAdsRoute
   '/overview': typeof AuthenticatedOverviewRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
+  '/crm/$id': typeof AuthenticatedCrmIdRoute
   '/campaigns/': typeof AuthenticatedCampaignsIndexRoute
+  '/crm/': typeof AuthenticatedCrmIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -76,7 +90,9 @@ export interface FileRoutesByTo {
   '/ads': typeof AuthenticatedAdsRoute
   '/overview': typeof AuthenticatedOverviewRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
+  '/crm/$id': typeof AuthenticatedCrmIdRoute
   '/campaigns': typeof AuthenticatedCampaignsIndexRoute
+  '/crm': typeof AuthenticatedCrmIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -87,7 +103,9 @@ export interface FileRoutesById {
   '/_authenticated/ads': typeof AuthenticatedAdsRoute
   '/_authenticated/overview': typeof AuthenticatedOverviewRoute
   '/_authenticated/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
+  '/_authenticated/crm/$id': typeof AuthenticatedCrmIdRoute
   '/_authenticated/campaigns/': typeof AuthenticatedCampaignsIndexRoute
+  '/_authenticated/crm/': typeof AuthenticatedCrmIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -98,7 +116,9 @@ export interface FileRouteTypes {
     | '/ads'
     | '/overview'
     | '/campaigns/$id'
+    | '/crm/$id'
     | '/campaigns/'
+    | '/crm/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -107,7 +127,9 @@ export interface FileRouteTypes {
     | '/ads'
     | '/overview'
     | '/campaigns/$id'
+    | '/crm/$id'
     | '/campaigns'
+    | '/crm'
   id:
     | '__root__'
     | '/'
@@ -117,7 +139,9 @@ export interface FileRouteTypes {
     | '/_authenticated/ads'
     | '/_authenticated/overview'
     | '/_authenticated/campaigns/$id'
+    | '/_authenticated/crm/$id'
     | '/_authenticated/campaigns/'
+    | '/_authenticated/crm/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -185,6 +209,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCampaignsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/crm/': {
+      id: '/_authenticated/crm/'
+      path: '/crm'
+      fullPath: '/crm/'
+      preLoaderRoute: typeof AuthenticatedCrmIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/crm/$id': {
+      id: '/_authenticated/crm/$id'
+      path: '/crm/$id'
+      fullPath: '/crm/$id'
+      preLoaderRoute: typeof AuthenticatedCrmIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -192,14 +230,18 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdsRoute: typeof AuthenticatedAdsRoute
   AuthenticatedOverviewRoute: typeof AuthenticatedOverviewRoute
   AuthenticatedCampaignsIdRoute: typeof AuthenticatedCampaignsIdRoute
+  AuthenticatedCrmIdRoute: typeof AuthenticatedCrmIdRoute
   AuthenticatedCampaignsIndexRoute: typeof AuthenticatedCampaignsIndexRoute
+  AuthenticatedCrmIndexRoute: typeof AuthenticatedCrmIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdsRoute: AuthenticatedAdsRoute,
   AuthenticatedOverviewRoute: AuthenticatedOverviewRoute,
   AuthenticatedCampaignsIdRoute: AuthenticatedCampaignsIdRoute,
+  AuthenticatedCrmIdRoute: AuthenticatedCrmIdRoute,
   AuthenticatedCampaignsIndexRoute: AuthenticatedCampaignsIndexRoute,
+  AuthenticatedCrmIndexRoute: AuthenticatedCrmIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
