@@ -50,7 +50,7 @@ export function ChartCard({
 
 type Fmt = (v: number) => string;
 
-function ThemedTooltip({ active, payload, label, fmt, labelFmt }: TooltipProps<number, string> & { fmt?: Fmt; labelFmt?: (l: string) => string }) {
+function ThemedTooltip({ active, payload, label, fmt, labelFmt }: TooltipProps<number, string> & { fmt?: Fmt | undefined; labelFmt?: ((l: string) => string) | undefined }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-md border border-border bg-popover px-3 py-2 text-xs shadow-lg">
@@ -123,7 +123,7 @@ export function TrendChart({
             type="monotone"
             dataKey={s.key}
             name={s.label}
-            stackId={stacked ? "1" : undefined}
+            {...(stacked ? { stackId: "1" } : {})}
             stroke={s.color ?? CHART_COLORS[i]}
             strokeWidth={2}
             fill={`url(#g-${s.key})`}
@@ -135,7 +135,7 @@ export function TrendChart({
   );
 }
 
-export function LinesChart({ data, xKey = "key", series, height = 260, fmt }: { data: Record<string, unknown>[]; xKey?: string; series: Series[]; height?: number; fmt?: Fmt }) {
+export function LinesChart({ data, xKey = "key", series, height = 260, fmt }: { data: Record<string, unknown>[]; xKey?: string | undefined; series: Series[]; height?: number | undefined; fmt?: Fmt | undefined }) {
   const tickFmt = (v: string) => (isDateKey(v) ? fmtShortDate(v) : v);
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -171,7 +171,7 @@ export function BarsChart({
   fmt?: Fmt | undefined;
   horizontal?: boolean | undefined;
   stacked?: boolean | undefined;
-  onBarClick?: (row: Record<string, unknown>) => void | undefined;
+  onBarClick?: ((row: Record<string, unknown>) => void) | undefined;
   colorByIndex?: boolean | undefined;
 }) {
   const tickFmt = (v: string) => (isDateKey(v) ? fmtShortDate(v) : v);
@@ -197,13 +197,14 @@ export function BarsChart({
             key={s.key}
             dataKey={s.key}
             name={s.label}
-            stackId={stacked ? "1" : undefined}
+            {...(stacked ? { stackId: "1" } : {})}
             fill={s.color ?? CHART_COLORS[i]}
             radius={stacked ? 0 : horizontal ? [0, 3, 3, 0] : [3, 3, 0, 0]}
             maxBarSize={36}
             isAnimationActive={false}
-            onClick={onBarClick ? (d) => onBarClick((d as { payload: Record<string, unknown> }).payload) : undefined}
-            className={onBarClick ? "cursor-pointer" : undefined}
+            {...(onBarClick
+              ? { onClick: (d: unknown) => onBarClick((d as { payload: Record<string, unknown> }).payload), className: "cursor-pointer" }
+              : {})}
           >
             {colorByIndex && data.map((_, idx) => <Cell key={idx} fill={CHART_COLORS[idx % CHART_COLORS.length]} />)}
           </Bar>
@@ -219,10 +220,10 @@ export function DonutChart({
   fmt,
   onSliceClick,
 }: {
-  data: { name: string; value: number; color?: string; id?: string }[];
+  data: { name: string; value: number; color?: string | undefined; id?: string | undefined }[];
   height?: number | undefined;
   fmt?: Fmt | undefined;
-  onSliceClick?: (d: { name: string | undefined; id?: string }) => void;
+  onSliceClick?: ((d: { name: string; id?: string | undefined }) => void) | undefined;
 }) {
   const total = data.reduce((s, d) => s + d.value, 0);
   return (
@@ -239,8 +240,9 @@ export function DonutChart({
               paddingAngle={2}
               stroke="none"
               isAnimationActive={false}
-              onClick={onSliceClick ? (d) => onSliceClick(d as unknown as { name: string; id?: string }) : undefined}
-              className={onSliceClick ? "cursor-pointer" : undefined}
+              {...(onSliceClick
+                ? { onClick: (d: unknown) => onSliceClick(d as { name: string; id?: string }), className: "cursor-pointer" }
+                : {})}
             >
               {data.map((d, i) => (
                 <Cell key={d.name} fill={d.color ?? CHART_COLORS[i % CHART_COLORS.length]} />
@@ -280,9 +282,9 @@ export function BarList({
   onSelect,
   color = "var(--chart-1)",
 }: {
-  items: { id: string; label: ReactNode; value: number; sub?: ReactNode }[];
+  items: { id: string; label: ReactNode; value: number; sub?: ReactNode | undefined }[];
   fmt?: Fmt | undefined;
-  onSelect?: (id: string) => void | undefined;
+  onSelect?: ((id: string) => void) | undefined;
   color?: string | undefined;
 }) {
   const max = Math.max(1, ...items.map((i) => i.value));
