@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as AuthenticatedAdsRouteImport } from './routes/_authenticated/ads'
 import { Route as AuthenticatedOverviewRouteImport } from './routes/_authenticated/overview'
 
 const IndexRoute = IndexRouteImport.update({
@@ -34,6 +35,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdsRoute = AuthenticatedAdsRouteImport.update({
+  id: '/ads',
+  path: '/ads',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOverviewRoute = AuthenticatedOverviewRouteImport.update({
   id: '/overview',
   path: '/overview',
@@ -44,12 +50,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/ads': typeof AuthenticatedAdsRoute
   '/overview': typeof AuthenticatedOverviewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/ads': typeof AuthenticatedAdsRoute
   '/overview': typeof AuthenticatedOverviewRoute
 }
 export interface FileRoutesById {
@@ -58,19 +66,21 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/ads': typeof AuthenticatedAdsRoute
   '/_authenticated/overview': typeof AuthenticatedOverviewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/reset-password' | '/overview'
+  fullPaths: '/' | '/auth' | '/reset-password' | '/ads' | '/overview'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/reset-password' | '/overview'
+  to: '/' | '/auth' | '/reset-password' | '/ads' | '/overview'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/reset-password'
+    | '/_authenticated/ads'
     | '/_authenticated/overview'
   fileRoutesById: FileRoutesById
 }
@@ -111,6 +121,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/ads': {
+      id: '/_authenticated/ads'
+      path: '/ads'
+      fullPath: '/ads'
+      preLoaderRoute: typeof AuthenticatedAdsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/overview': {
       id: '/_authenticated/overview'
       path: '/overview'
@@ -122,10 +139,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdsRoute: typeof AuthenticatedAdsRoute
   AuthenticatedOverviewRoute: typeof AuthenticatedOverviewRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdsRoute: AuthenticatedAdsRoute,
   AuthenticatedOverviewRoute: AuthenticatedOverviewRoute,
 }
 
