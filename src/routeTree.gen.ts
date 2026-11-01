@@ -21,6 +21,8 @@ import { Route as AuthenticatedContentIndexRouteImport } from './routes/_authent
 import { Route as AuthenticatedContentIdRouteImport } from './routes/_authenticated/content.$id'
 import { Route as AuthenticatedCrmIndexRouteImport } from './routes/_authenticated/crm.index'
 import { Route as AuthenticatedCrmIdRouteImport } from './routes/_authenticated/crm.$id'
+import { Route as AuthenticatedMarketsIndexRouteImport } from './routes/_authenticated/markets.index'
+import { Route as AuthenticatedMarketsCodeRouteImport } from './routes/_authenticated/markets.$code'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -84,6 +86,18 @@ const AuthenticatedCrmIdRoute = AuthenticatedCrmIdRouteImport.update({
   path: '/crm/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMarketsIndexRoute =
+  AuthenticatedMarketsIndexRouteImport.update({
+    id: '/markets/',
+    path: '/markets/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMarketsCodeRoute =
+  AuthenticatedMarketsCodeRouteImport.update({
+    id: '/markets/$code',
+    path: '/markets/$code',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -94,9 +108,11 @@ export interface FileRoutesByFullPath {
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/content/$id': typeof AuthenticatedContentIdRoute
   '/crm/$id': typeof AuthenticatedCrmIdRoute
+  '/markets/$code': typeof AuthenticatedMarketsCodeRoute
   '/campaigns/': typeof AuthenticatedCampaignsIndexRoute
   '/content/': typeof AuthenticatedContentIndexRoute
   '/crm/': typeof AuthenticatedCrmIndexRoute
+  '/markets/': typeof AuthenticatedMarketsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -107,9 +123,11 @@ export interface FileRoutesByTo {
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/content/$id': typeof AuthenticatedContentIdRoute
   '/crm/$id': typeof AuthenticatedCrmIdRoute
+  '/markets/$code': typeof AuthenticatedMarketsCodeRoute
   '/campaigns': typeof AuthenticatedCampaignsIndexRoute
   '/content': typeof AuthenticatedContentIndexRoute
   '/crm': typeof AuthenticatedCrmIndexRoute
+  '/markets': typeof AuthenticatedMarketsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -122,9 +140,11 @@ export interface FileRoutesById {
   '/_authenticated/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/_authenticated/content/$id': typeof AuthenticatedContentIdRoute
   '/_authenticated/crm/$id': typeof AuthenticatedCrmIdRoute
+  '/_authenticated/markets/$code': typeof AuthenticatedMarketsCodeRoute
   '/_authenticated/campaigns/': typeof AuthenticatedCampaignsIndexRoute
   '/_authenticated/content/': typeof AuthenticatedContentIndexRoute
   '/_authenticated/crm/': typeof AuthenticatedCrmIndexRoute
+  '/_authenticated/markets/': typeof AuthenticatedMarketsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -137,9 +157,11 @@ export interface FileRouteTypes {
     | '/campaigns/$id'
     | '/content/$id'
     | '/crm/$id'
+    | '/markets/$code'
     | '/campaigns/'
     | '/content/'
     | '/crm/'
+    | '/markets/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -150,9 +172,11 @@ export interface FileRouteTypes {
     | '/campaigns/$id'
     | '/content/$id'
     | '/crm/$id'
+    | '/markets/$code'
     | '/campaigns'
     | '/content'
     | '/crm'
+    | '/markets'
   id:
     | '__root__'
     | '/'
@@ -164,9 +188,11 @@ export interface FileRouteTypes {
     | '/_authenticated/campaigns/$id'
     | '/_authenticated/content/$id'
     | '/_authenticated/crm/$id'
+    | '/_authenticated/markets/$code'
     | '/_authenticated/campaigns/'
     | '/_authenticated/content/'
     | '/_authenticated/crm/'
+    | '/_authenticated/markets/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -262,6 +288,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCrmIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/markets/': {
+      id: '/_authenticated/markets/'
+      path: '/markets'
+      fullPath: '/markets/'
+      preLoaderRoute: typeof AuthenticatedMarketsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/markets/$code': {
+      id: '/_authenticated/markets/$code'
+      path: '/markets/$code'
+      fullPath: '/markets/$code'
+      preLoaderRoute: typeof AuthenticatedMarketsCodeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -271,9 +311,11 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCampaignsIdRoute: typeof AuthenticatedCampaignsIdRoute
   AuthenticatedContentIdRoute: typeof AuthenticatedContentIdRoute
   AuthenticatedCrmIdRoute: typeof AuthenticatedCrmIdRoute
+  AuthenticatedMarketsCodeRoute: typeof AuthenticatedMarketsCodeRoute
   AuthenticatedCampaignsIndexRoute: typeof AuthenticatedCampaignsIndexRoute
   AuthenticatedContentIndexRoute: typeof AuthenticatedContentIndexRoute
   AuthenticatedCrmIndexRoute: typeof AuthenticatedCrmIndexRoute
+  AuthenticatedMarketsIndexRoute: typeof AuthenticatedMarketsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -282,9 +324,11 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCampaignsIdRoute: AuthenticatedCampaignsIdRoute,
   AuthenticatedContentIdRoute: AuthenticatedContentIdRoute,
   AuthenticatedCrmIdRoute: AuthenticatedCrmIdRoute,
+  AuthenticatedMarketsCodeRoute: AuthenticatedMarketsCodeRoute,
   AuthenticatedCampaignsIndexRoute: AuthenticatedCampaignsIndexRoute,
   AuthenticatedContentIndexRoute: AuthenticatedContentIndexRoute,
   AuthenticatedCrmIndexRoute: AuthenticatedCrmIndexRoute,
+  AuthenticatedMarketsIndexRoute: AuthenticatedMarketsIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
