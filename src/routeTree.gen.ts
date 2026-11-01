@@ -18,6 +18,8 @@ import { Route as AuthenticatedOverviewRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedWebRouteImport } from './routes/_authenticated/web'
 import { Route as AuthenticatedCampaignsIndexRouteImport } from './routes/_authenticated/campaigns.index'
 import { Route as AuthenticatedCampaignsIdRouteImport } from './routes/_authenticated/campaigns.$id'
+import { Route as AuthenticatedCompetitorsIndexRouteImport } from './routes/_authenticated/competitors.index'
+import { Route as AuthenticatedCompetitorsIdRouteImport } from './routes/_authenticated/competitors.$id'
 import { Route as AuthenticatedContentIndexRouteImport } from './routes/_authenticated/content.index'
 import { Route as AuthenticatedContentIdRouteImport } from './routes/_authenticated/content.$id'
 import { Route as AuthenticatedCrmIndexRouteImport } from './routes/_authenticated/crm.index'
@@ -26,6 +28,8 @@ import { Route as AuthenticatedMarketsIndexRouteImport } from './routes/_authent
 import { Route as AuthenticatedMarketsCodeRouteImport } from './routes/_authenticated/markets.$code'
 import { Route as AuthenticatedSocialIndexRouteImport } from './routes/_authenticated/social.index'
 import { Route as AuthenticatedSocialPostIdRouteImport } from './routes/_authenticated/social.$postId'
+import { Route as AuthenticatedTeamIndexRouteImport } from './routes/_authenticated/team.index'
+import { Route as AuthenticatedTeamIdRouteImport } from './routes/_authenticated/team.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -73,6 +77,18 @@ const AuthenticatedCampaignsIdRoute =
     path: '/campaigns/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedCompetitorsIndexRoute =
+  AuthenticatedCompetitorsIndexRouteImport.update({
+    id: '/competitors/',
+    path: '/competitors/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCompetitorsIdRoute =
+  AuthenticatedCompetitorsIdRouteImport.update({
+    id: '/competitors/$id',
+    path: '/competitors/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedContentIndexRoute =
   AuthenticatedContentIndexRouteImport.update({
     id: '/content/',
@@ -118,6 +134,16 @@ const AuthenticatedSocialPostIdRoute =
     path: '/social/$postId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedTeamIndexRoute = AuthenticatedTeamIndexRouteImport.update({
+  id: '/team/',
+  path: '/team/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTeamIdRoute = AuthenticatedTeamIdRouteImport.update({
+  id: '/team/$id',
+  path: '/team/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -127,15 +153,19 @@ export interface FileRoutesByFullPath {
   '/overview': typeof AuthenticatedOverviewRoute
   '/web': typeof AuthenticatedWebRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
+  '/competitors/$id': typeof AuthenticatedCompetitorsIdRoute
   '/content/$id': typeof AuthenticatedContentIdRoute
   '/crm/$id': typeof AuthenticatedCrmIdRoute
   '/markets/$code': typeof AuthenticatedMarketsCodeRoute
   '/social/$postId': typeof AuthenticatedSocialPostIdRoute
+  '/team/$id': typeof AuthenticatedTeamIdRoute
   '/campaigns/': typeof AuthenticatedCampaignsIndexRoute
+  '/competitors/': typeof AuthenticatedCompetitorsIndexRoute
   '/content/': typeof AuthenticatedContentIndexRoute
   '/crm/': typeof AuthenticatedCrmIndexRoute
   '/markets/': typeof AuthenticatedMarketsIndexRoute
   '/social/': typeof AuthenticatedSocialIndexRoute
+  '/team/': typeof AuthenticatedTeamIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -145,15 +175,19 @@ export interface FileRoutesByTo {
   '/overview': typeof AuthenticatedOverviewRoute
   '/web': typeof AuthenticatedWebRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
+  '/competitors/$id': typeof AuthenticatedCompetitorsIdRoute
   '/content/$id': typeof AuthenticatedContentIdRoute
   '/crm/$id': typeof AuthenticatedCrmIdRoute
   '/markets/$code': typeof AuthenticatedMarketsCodeRoute
   '/social/$postId': typeof AuthenticatedSocialPostIdRoute
+  '/team/$id': typeof AuthenticatedTeamIdRoute
   '/campaigns': typeof AuthenticatedCampaignsIndexRoute
+  '/competitors': typeof AuthenticatedCompetitorsIndexRoute
   '/content': typeof AuthenticatedContentIndexRoute
   '/crm': typeof AuthenticatedCrmIndexRoute
   '/markets': typeof AuthenticatedMarketsIndexRoute
   '/social': typeof AuthenticatedSocialIndexRoute
+  '/team': typeof AuthenticatedTeamIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -165,15 +199,19 @@ export interface FileRoutesById {
   '/_authenticated/overview': typeof AuthenticatedOverviewRoute
   '/_authenticated/web': typeof AuthenticatedWebRoute
   '/_authenticated/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
+  '/_authenticated/competitors/$id': typeof AuthenticatedCompetitorsIdRoute
   '/_authenticated/content/$id': typeof AuthenticatedContentIdRoute
   '/_authenticated/crm/$id': typeof AuthenticatedCrmIdRoute
   '/_authenticated/markets/$code': typeof AuthenticatedMarketsCodeRoute
   '/_authenticated/social/$postId': typeof AuthenticatedSocialPostIdRoute
+  '/_authenticated/team/$id': typeof AuthenticatedTeamIdRoute
   '/_authenticated/campaigns/': typeof AuthenticatedCampaignsIndexRoute
+  '/_authenticated/competitors/': typeof AuthenticatedCompetitorsIndexRoute
   '/_authenticated/content/': typeof AuthenticatedContentIndexRoute
   '/_authenticated/crm/': typeof AuthenticatedCrmIndexRoute
   '/_authenticated/markets/': typeof AuthenticatedMarketsIndexRoute
   '/_authenticated/social/': typeof AuthenticatedSocialIndexRoute
+  '/_authenticated/team/': typeof AuthenticatedTeamIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -185,15 +223,19 @@ export interface FileRouteTypes {
     | '/overview'
     | '/web'
     | '/campaigns/$id'
+    | '/competitors/$id'
     | '/content/$id'
     | '/crm/$id'
     | '/markets/$code'
     | '/social/$postId'
+    | '/team/$id'
     | '/campaigns/'
+    | '/competitors/'
     | '/content/'
     | '/crm/'
     | '/markets/'
     | '/social/'
+    | '/team/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -203,15 +245,19 @@ export interface FileRouteTypes {
     | '/overview'
     | '/web'
     | '/campaigns/$id'
+    | '/competitors/$id'
     | '/content/$id'
     | '/crm/$id'
     | '/markets/$code'
     | '/social/$postId'
+    | '/team/$id'
     | '/campaigns'
+    | '/competitors'
     | '/content'
     | '/crm'
     | '/markets'
     | '/social'
+    | '/team'
   id:
     | '__root__'
     | '/'
@@ -222,15 +268,19 @@ export interface FileRouteTypes {
     | '/_authenticated/overview'
     | '/_authenticated/web'
     | '/_authenticated/campaigns/$id'
+    | '/_authenticated/competitors/$id'
     | '/_authenticated/content/$id'
     | '/_authenticated/crm/$id'
     | '/_authenticated/markets/$code'
     | '/_authenticated/social/$postId'
+    | '/_authenticated/team/$id'
     | '/_authenticated/campaigns/'
+    | '/_authenticated/competitors/'
     | '/_authenticated/content/'
     | '/_authenticated/crm/'
     | '/_authenticated/markets/'
     | '/_authenticated/social/'
+    | '/_authenticated/team/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -305,6 +355,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCampaignsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/competitors/': {
+      id: '/_authenticated/competitors/'
+      path: '/competitors'
+      fullPath: '/competitors/'
+      preLoaderRoute: typeof AuthenticatedCompetitorsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/competitors/$id': {
+      id: '/_authenticated/competitors/$id'
+      path: '/competitors/$id'
+      fullPath: '/competitors/$id'
+      preLoaderRoute: typeof AuthenticatedCompetitorsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/content/': {
       id: '/_authenticated/content/'
       path: '/content'
@@ -361,6 +425,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSocialPostIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/team/': {
+      id: '/_authenticated/team/'
+      path: '/team'
+      fullPath: '/team/'
+      preLoaderRoute: typeof AuthenticatedTeamIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/team/$id': {
+      id: '/_authenticated/team/$id'
+      path: '/team/$id'
+      fullPath: '/team/$id'
+      preLoaderRoute: typeof AuthenticatedTeamIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -369,15 +447,19 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOverviewRoute: typeof AuthenticatedOverviewRoute
   AuthenticatedWebRoute: typeof AuthenticatedWebRoute
   AuthenticatedCampaignsIdRoute: typeof AuthenticatedCampaignsIdRoute
+  AuthenticatedCompetitorsIdRoute: typeof AuthenticatedCompetitorsIdRoute
   AuthenticatedContentIdRoute: typeof AuthenticatedContentIdRoute
   AuthenticatedCrmIdRoute: typeof AuthenticatedCrmIdRoute
   AuthenticatedMarketsCodeRoute: typeof AuthenticatedMarketsCodeRoute
   AuthenticatedSocialPostIdRoute: typeof AuthenticatedSocialPostIdRoute
+  AuthenticatedTeamIdRoute: typeof AuthenticatedTeamIdRoute
   AuthenticatedCampaignsIndexRoute: typeof AuthenticatedCampaignsIndexRoute
+  AuthenticatedCompetitorsIndexRoute: typeof AuthenticatedCompetitorsIndexRoute
   AuthenticatedContentIndexRoute: typeof AuthenticatedContentIndexRoute
   AuthenticatedCrmIndexRoute: typeof AuthenticatedCrmIndexRoute
   AuthenticatedMarketsIndexRoute: typeof AuthenticatedMarketsIndexRoute
   AuthenticatedSocialIndexRoute: typeof AuthenticatedSocialIndexRoute
+  AuthenticatedTeamIndexRoute: typeof AuthenticatedTeamIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -385,15 +467,19 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOverviewRoute: AuthenticatedOverviewRoute,
   AuthenticatedWebRoute: AuthenticatedWebRoute,
   AuthenticatedCampaignsIdRoute: AuthenticatedCampaignsIdRoute,
+  AuthenticatedCompetitorsIdRoute: AuthenticatedCompetitorsIdRoute,
   AuthenticatedContentIdRoute: AuthenticatedContentIdRoute,
   AuthenticatedCrmIdRoute: AuthenticatedCrmIdRoute,
   AuthenticatedMarketsCodeRoute: AuthenticatedMarketsCodeRoute,
   AuthenticatedSocialPostIdRoute: AuthenticatedSocialPostIdRoute,
+  AuthenticatedTeamIdRoute: AuthenticatedTeamIdRoute,
   AuthenticatedCampaignsIndexRoute: AuthenticatedCampaignsIndexRoute,
+  AuthenticatedCompetitorsIndexRoute: AuthenticatedCompetitorsIndexRoute,
   AuthenticatedContentIndexRoute: AuthenticatedContentIndexRoute,
   AuthenticatedCrmIndexRoute: AuthenticatedCrmIndexRoute,
   AuthenticatedMarketsIndexRoute: AuthenticatedMarketsIndexRoute,
   AuthenticatedSocialIndexRoute: AuthenticatedSocialIndexRoute,
+  AuthenticatedTeamIndexRoute: AuthenticatedTeamIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
