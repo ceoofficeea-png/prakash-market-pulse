@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAdsRouteImport } from './routes/_authenticated/ads'
 import { Route as AuthenticatedOverviewRouteImport } from './routes/_authenticated/overview'
+import { Route as AuthenticatedWebRouteImport } from './routes/_authenticated/web'
 import { Route as AuthenticatedCampaignsIndexRouteImport } from './routes/_authenticated/campaigns.index'
 import { Route as AuthenticatedCampaignsIdRouteImport } from './routes/_authenticated/campaigns.$id'
 import { Route as AuthenticatedContentIndexRouteImport } from './routes/_authenticated/content.index'
@@ -23,6 +24,8 @@ import { Route as AuthenticatedCrmIndexRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedCrmIdRouteImport } from './routes/_authenticated/crm.$id'
 import { Route as AuthenticatedMarketsIndexRouteImport } from './routes/_authenticated/markets.index'
 import { Route as AuthenticatedMarketsCodeRouteImport } from './routes/_authenticated/markets.$code'
+import { Route as AuthenticatedSocialIndexRouteImport } from './routes/_authenticated/social.index'
+import { Route as AuthenticatedSocialPostIdRouteImport } from './routes/_authenticated/social.$postId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -51,6 +54,11 @@ const AuthenticatedAdsRoute = AuthenticatedAdsRouteImport.update({
 const AuthenticatedOverviewRoute = AuthenticatedOverviewRouteImport.update({
   id: '/overview',
   path: '/overview',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedWebRoute = AuthenticatedWebRouteImport.update({
+  id: '/web',
+  path: '/web',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCampaignsIndexRoute =
@@ -98,6 +106,18 @@ const AuthenticatedMarketsCodeRoute =
     path: '/markets/$code',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSocialIndexRoute =
+  AuthenticatedSocialIndexRouteImport.update({
+    id: '/social/',
+    path: '/social/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSocialPostIdRoute =
+  AuthenticatedSocialPostIdRouteImport.update({
+    id: '/social/$postId',
+    path: '/social/$postId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -105,14 +125,17 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/ads': typeof AuthenticatedAdsRoute
   '/overview': typeof AuthenticatedOverviewRoute
+  '/web': typeof AuthenticatedWebRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/content/$id': typeof AuthenticatedContentIdRoute
   '/crm/$id': typeof AuthenticatedCrmIdRoute
   '/markets/$code': typeof AuthenticatedMarketsCodeRoute
+  '/social/$postId': typeof AuthenticatedSocialPostIdRoute
   '/campaigns/': typeof AuthenticatedCampaignsIndexRoute
   '/content/': typeof AuthenticatedContentIndexRoute
   '/crm/': typeof AuthenticatedCrmIndexRoute
   '/markets/': typeof AuthenticatedMarketsIndexRoute
+  '/social/': typeof AuthenticatedSocialIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -120,14 +143,17 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/ads': typeof AuthenticatedAdsRoute
   '/overview': typeof AuthenticatedOverviewRoute
+  '/web': typeof AuthenticatedWebRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/content/$id': typeof AuthenticatedContentIdRoute
   '/crm/$id': typeof AuthenticatedCrmIdRoute
   '/markets/$code': typeof AuthenticatedMarketsCodeRoute
+  '/social/$postId': typeof AuthenticatedSocialPostIdRoute
   '/campaigns': typeof AuthenticatedCampaignsIndexRoute
   '/content': typeof AuthenticatedContentIndexRoute
   '/crm': typeof AuthenticatedCrmIndexRoute
   '/markets': typeof AuthenticatedMarketsIndexRoute
+  '/social': typeof AuthenticatedSocialIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -137,14 +163,17 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/ads': typeof AuthenticatedAdsRoute
   '/_authenticated/overview': typeof AuthenticatedOverviewRoute
+  '/_authenticated/web': typeof AuthenticatedWebRoute
   '/_authenticated/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/_authenticated/content/$id': typeof AuthenticatedContentIdRoute
   '/_authenticated/crm/$id': typeof AuthenticatedCrmIdRoute
   '/_authenticated/markets/$code': typeof AuthenticatedMarketsCodeRoute
+  '/_authenticated/social/$postId': typeof AuthenticatedSocialPostIdRoute
   '/_authenticated/campaigns/': typeof AuthenticatedCampaignsIndexRoute
   '/_authenticated/content/': typeof AuthenticatedContentIndexRoute
   '/_authenticated/crm/': typeof AuthenticatedCrmIndexRoute
   '/_authenticated/markets/': typeof AuthenticatedMarketsIndexRoute
+  '/_authenticated/social/': typeof AuthenticatedSocialIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -154,14 +183,17 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/ads'
     | '/overview'
+    | '/web'
     | '/campaigns/$id'
     | '/content/$id'
     | '/crm/$id'
     | '/markets/$code'
+    | '/social/$postId'
     | '/campaigns/'
     | '/content/'
     | '/crm/'
     | '/markets/'
+    | '/social/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -169,14 +201,17 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/ads'
     | '/overview'
+    | '/web'
     | '/campaigns/$id'
     | '/content/$id'
     | '/crm/$id'
     | '/markets/$code'
+    | '/social/$postId'
     | '/campaigns'
     | '/content'
     | '/crm'
     | '/markets'
+    | '/social'
   id:
     | '__root__'
     | '/'
@@ -185,14 +220,17 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/ads'
     | '/_authenticated/overview'
+    | '/_authenticated/web'
     | '/_authenticated/campaigns/$id'
     | '/_authenticated/content/$id'
     | '/_authenticated/crm/$id'
     | '/_authenticated/markets/$code'
+    | '/_authenticated/social/$postId'
     | '/_authenticated/campaigns/'
     | '/_authenticated/content/'
     | '/_authenticated/crm/'
     | '/_authenticated/markets/'
+    | '/_authenticated/social/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -244,6 +282,13 @@ declare module '@tanstack/react-router' {
       path: '/overview'
       fullPath: '/overview'
       preLoaderRoute: typeof AuthenticatedOverviewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/web': {
+      id: '/_authenticated/web'
+      path: '/web'
+      fullPath: '/web'
+      preLoaderRoute: typeof AuthenticatedWebRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/campaigns/': {
@@ -302,33 +347,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketsCodeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/social/': {
+      id: '/_authenticated/social/'
+      path: '/social'
+      fullPath: '/social/'
+      preLoaderRoute: typeof AuthenticatedSocialIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/social/$postId': {
+      id: '/_authenticated/social/$postId'
+      path: '/social/$postId'
+      fullPath: '/social/$postId'
+      preLoaderRoute: typeof AuthenticatedSocialPostIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdsRoute: typeof AuthenticatedAdsRoute
   AuthenticatedOverviewRoute: typeof AuthenticatedOverviewRoute
+  AuthenticatedWebRoute: typeof AuthenticatedWebRoute
   AuthenticatedCampaignsIdRoute: typeof AuthenticatedCampaignsIdRoute
   AuthenticatedContentIdRoute: typeof AuthenticatedContentIdRoute
   AuthenticatedCrmIdRoute: typeof AuthenticatedCrmIdRoute
   AuthenticatedMarketsCodeRoute: typeof AuthenticatedMarketsCodeRoute
+  AuthenticatedSocialPostIdRoute: typeof AuthenticatedSocialPostIdRoute
   AuthenticatedCampaignsIndexRoute: typeof AuthenticatedCampaignsIndexRoute
   AuthenticatedContentIndexRoute: typeof AuthenticatedContentIndexRoute
   AuthenticatedCrmIndexRoute: typeof AuthenticatedCrmIndexRoute
   AuthenticatedMarketsIndexRoute: typeof AuthenticatedMarketsIndexRoute
+  AuthenticatedSocialIndexRoute: typeof AuthenticatedSocialIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdsRoute: AuthenticatedAdsRoute,
   AuthenticatedOverviewRoute: AuthenticatedOverviewRoute,
+  AuthenticatedWebRoute: AuthenticatedWebRoute,
   AuthenticatedCampaignsIdRoute: AuthenticatedCampaignsIdRoute,
   AuthenticatedContentIdRoute: AuthenticatedContentIdRoute,
   AuthenticatedCrmIdRoute: AuthenticatedCrmIdRoute,
   AuthenticatedMarketsCodeRoute: AuthenticatedMarketsCodeRoute,
+  AuthenticatedSocialPostIdRoute: AuthenticatedSocialPostIdRoute,
   AuthenticatedCampaignsIndexRoute: AuthenticatedCampaignsIndexRoute,
   AuthenticatedContentIndexRoute: AuthenticatedContentIndexRoute,
   AuthenticatedCrmIndexRoute: AuthenticatedCrmIndexRoute,
   AuthenticatedMarketsIndexRoute: AuthenticatedMarketsIndexRoute,
+  AuthenticatedSocialIndexRoute: AuthenticatedSocialIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
