@@ -170,7 +170,14 @@ export function totals(rows: MetricsRow[] | undefined) {
 export const useLeads = () =>
   useQuery({ queryKey: ["leads"], queryFn: async () => unwrap(await supabase.from("leads").select("*").order("created_at", { ascending: false })) });
 export const useLead = (id: number) =>
-  useQuery({ queryKey: ["leads", id], queryFn: async () => unwrap(await supabase.from("leads").select("*").eq("id", id).maybeSingle()) });
+  useQuery({
+    queryKey: ["leads", id],
+    queryFn: async (): Promise<Lead | null> => {
+      const { data, error } = await supabase.from("leads").select("*").eq("id", id).maybeSingle();
+      if (error) throw new Error(error.message);
+      return data;
+    },
+  });
 export const useLeadActivities = (leadId: number) =>
   useQuery({
     queryKey: ["lead_activities", leadId],

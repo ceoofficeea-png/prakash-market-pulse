@@ -182,7 +182,7 @@ function MarketsPage() {
             { key: "cpl", header: "CPL", align: "right", value: (r) => safeDiv(r.spend, r.leads), cell: (r) => fmtUsd(safeDiv(r.spend, r.leads)) },
             { key: "sessions", header: "Sessions", align: "right", cell: (r) => fmtCompact(r.sessions) },
             { key: "pipeline", header: "Pipeline", align: "right", cell: (r) => fmtUsd(r.pipeline, true) },
-            { key: "conv", header: "Web CVR", align: "right", value: (r) => safeDiv(r.leads, r.sessions), cell: (r) => fmtPct(safeDiv(r.crmLeads, r.sessions), 2) },
+            { key: "conv", header: "Lead rate", align: "right", value: (r) => safeDiv(r.crmLeads, r.sessions), cell: (r) => fmtPct(safeDiv(r.crmLeads, r.sessions), 2) },
           ]}
         />
       </div>
