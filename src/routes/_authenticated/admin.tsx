@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Database, Plug, ShieldCheck, Users } from "lucide-react";
 import { toast } from "sonner";
 
+import { AddUserDialog } from "@/components/app/add-user-dialog";
 import { DataTable } from "@/components/app/data-table";
 import { KpiCard } from "@/components/app/kpi-card";
 import { KpiGrid, NoAccess, PageHeader } from "@/components/app/page";
@@ -105,6 +106,7 @@ function AdminPage() {
             rowKey={(r) => r.id}
             searchKeys={[(r) => r.full_name, (r) => r.email]}
             exportName="users"
+            toolbar={<AddUserDialog />}
             columns={[
               { key: "full_name", header: "User", cell: (r) => <div className="flex items-center gap-2"><Avatar className="size-7"><AvatarFallback className="bg-primary/15 text-xs text-primary">{initials(r.full_name || r.email || "U")}</AvatarFallback></Avatar><div><div className="font-medium">{r.full_name}{r.id === me.data?.id && <span className="eyebrow ml-2 text-primary">You</span>}</div><div className="text-xs text-muted-foreground">{r.email}</div></div></div> },
               { key: "created_at", header: "Joined", cell: (r) => <span className="num text-xs">{fmtDate(r.created_at)}</span> },
@@ -138,7 +140,7 @@ function AdminPage() {
               </tbody>
             </table>
           </div>
-          <p className="text-xs text-muted-foreground">You can't change your own role. To invite someone, ask them to create an account — they start as Viewer.</p>
+          <p className="text-xs text-muted-foreground">You can't change your own role. Use Add user to create a ready-to-use account, or let people sign up themselves — self sign-ups start as Viewer.</p>
         </TabsContent>
 
         <TabsContent value="connections">
