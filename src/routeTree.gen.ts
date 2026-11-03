@@ -13,8 +13,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdsRouteImport } from './routes/_authenticated/ads'
+import { Route as AuthenticatedAiRouteImport } from './routes/_authenticated/ai'
 import { Route as AuthenticatedOverviewRouteImport } from './routes/_authenticated/overview'
+import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedWebRouteImport } from './routes/_authenticated/web'
 import { Route as AuthenticatedCampaignsIndexRouteImport } from './routes/_authenticated/campaigns.index'
 import { Route as AuthenticatedCampaignsIdRouteImport } from './routes/_authenticated/campaigns.$id'
@@ -50,14 +53,29 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdsRoute = AuthenticatedAdsRouteImport.update({
   id: '/ads',
   path: '/ads',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAiRoute = AuthenticatedAiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOverviewRoute = AuthenticatedOverviewRouteImport.update({
   id: '/overview',
   path: '/overview',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedWebRoute = AuthenticatedWebRouteImport.update({
@@ -149,8 +167,11 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/ads': typeof AuthenticatedAdsRoute
+  '/ai': typeof AuthenticatedAiRoute
   '/overview': typeof AuthenticatedOverviewRoute
+  '/reports': typeof AuthenticatedReportsRoute
   '/web': typeof AuthenticatedWebRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/competitors/$id': typeof AuthenticatedCompetitorsIdRoute
@@ -171,8 +192,11 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/ads': typeof AuthenticatedAdsRoute
+  '/ai': typeof AuthenticatedAiRoute
   '/overview': typeof AuthenticatedOverviewRoute
+  '/reports': typeof AuthenticatedReportsRoute
   '/web': typeof AuthenticatedWebRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/competitors/$id': typeof AuthenticatedCompetitorsIdRoute
@@ -195,8 +219,11 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/ads': typeof AuthenticatedAdsRoute
+  '/_authenticated/ai': typeof AuthenticatedAiRoute
   '/_authenticated/overview': typeof AuthenticatedOverviewRoute
+  '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/web': typeof AuthenticatedWebRoute
   '/_authenticated/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/_authenticated/competitors/$id': typeof AuthenticatedCompetitorsIdRoute
@@ -219,8 +246,11 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/admin'
     | '/ads'
+    | '/ai'
     | '/overview'
+    | '/reports'
     | '/web'
     | '/campaigns/$id'
     | '/competitors/$id'
@@ -241,8 +271,11 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/admin'
     | '/ads'
+    | '/ai'
     | '/overview'
+    | '/reports'
     | '/web'
     | '/campaigns/$id'
     | '/competitors/$id'
@@ -264,8 +297,11 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/reset-password'
+    | '/_authenticated/admin'
     | '/_authenticated/ads'
+    | '/_authenticated/ai'
     | '/_authenticated/overview'
+    | '/_authenticated/reports'
     | '/_authenticated/web'
     | '/_authenticated/campaigns/$id'
     | '/_authenticated/competitors/$id'
@@ -320,6 +356,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ads': {
       id: '/_authenticated/ads'
       path: '/ads'
@@ -327,11 +370,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ai': {
+      id: '/_authenticated/ai'
+      path: '/ai'
+      fullPath: '/ai'
+      preLoaderRoute: typeof AuthenticatedAiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/overview': {
       id: '/_authenticated/overview'
       path: '/overview'
       fullPath: '/overview'
       preLoaderRoute: typeof AuthenticatedOverviewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/reports': {
+      id: '/_authenticated/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedReportsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/web': {
@@ -443,8 +500,11 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAdsRoute: typeof AuthenticatedAdsRoute
+  AuthenticatedAiRoute: typeof AuthenticatedAiRoute
   AuthenticatedOverviewRoute: typeof AuthenticatedOverviewRoute
+  AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedWebRoute: typeof AuthenticatedWebRoute
   AuthenticatedCampaignsIdRoute: typeof AuthenticatedCampaignsIdRoute
   AuthenticatedCompetitorsIdRoute: typeof AuthenticatedCompetitorsIdRoute
@@ -463,8 +523,11 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAdsRoute: AuthenticatedAdsRoute,
+  AuthenticatedAiRoute: AuthenticatedAiRoute,
   AuthenticatedOverviewRoute: AuthenticatedOverviewRoute,
+  AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedWebRoute: AuthenticatedWebRoute,
   AuthenticatedCampaignsIdRoute: AuthenticatedCampaignsIdRoute,
   AuthenticatedCompetitorsIdRoute: AuthenticatedCompetitorsIdRoute,
