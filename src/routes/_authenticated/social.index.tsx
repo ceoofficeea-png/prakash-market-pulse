@@ -7,6 +7,7 @@ import { DataTable } from "@/components/app/data-table";
 import { KpiCard } from "@/components/app/kpi-card";
 import { DemoNote, KpiGrid, PageHeader } from "@/components/app/page";
 import { StatusBadge } from "@/components/app/status-badge";
+import { SocialAnalytics } from "@/components/app/social-analytics";
 import { useLookups, useSocial, useSocialAccounts, useSocialPosts } from "@/lib/api";
 import { inRange, useFilters } from "@/lib/filters";
 import { fmtCompact, fmtDateTime, fmtNum, fmtPct, grainFor, pctChange, safeDiv, SOCIAL_PLATFORMS, socialColor, socialLabel } from "@/lib/format";
@@ -74,6 +75,7 @@ function SocialPage() {
         filters={["date", "country"]}
       />
 
+      <SocialAnalytics />
       <div className="mb-4 flex flex-wrap gap-2">
         {SOCIAL_PLATFORMS.map((p) => {
           const on = platforms.includes(p.id);

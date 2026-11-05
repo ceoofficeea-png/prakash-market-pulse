@@ -20,6 +20,7 @@ export function MultiSelect({
   onChange,
   icon,
   width = "w-64",
+  allLabel,
 }: {
   label: string;
   options: Option[];
@@ -27,11 +28,12 @@ export function MultiSelect({
   onChange: (v: string[]) => void;
   icon?: ReactNode | undefined;
   width?: string | undefined;
+  allLabel?: string | undefined;
 }) {
   const toggle = (v: string) => onChange(value.includes(v) ? value.filter((x) => x !== v) : [...value, v]);
   const summary =
     value.length === 0
-      ? `All ${label.toLowerCase()}`
+      ? (allLabel ?? `All ${label.toLowerCase()}`)
       : value.length === 1
         ? (options.find((o) => o.value === value[0])?.label ?? value[0])
         : `${value.length} ${label.toLowerCase()}`;
@@ -61,6 +63,7 @@ export function MultiSelect({
           <CommandInput placeholder={`Search ${label.toLowerCase()}…`} />
           <CommandList>
             <CommandEmpty>No match.</CommandEmpty>
+            <CommandGroup><CommandItem value={allLabel ?? `All ${label.toLowerCase()}`} onSelect={() => onChange([])}><Check className={cn("size-4", value.length > 0 && "opacity-0")} />{allLabel ?? `All ${label.toLowerCase()}`}</CommandItem></CommandGroup>
             {groups.map((g) => (
               <CommandGroup key={g || "all"} heading={g || undefined}>
                 {options
