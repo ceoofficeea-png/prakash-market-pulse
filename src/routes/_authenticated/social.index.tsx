@@ -72,11 +72,12 @@ function SocialPage() {
       <PageHeader
         eyebrow="02 · Social Media Management"
         title="Social media"
-        description="Audience, engagement and publishing across LinkedIn, Facebook, Instagram, YouTube and X."
+        description="Audience, engagement and publishing across Facebook, Instagram, Snapchat, X, LinkedIn, YouTube and WhatsApp Business."
         filters={["date", "country"]}
       />
 
       <SocialAnalytics />
+      <h2 className="mb-3 text-sm font-semibold">Publishing & shared account records</h2>
       <div className="mb-4 flex flex-wrap gap-2">
         {SOCIAL_PLATFORMS.map((p) => {
           const on = platforms.includes(p.id);

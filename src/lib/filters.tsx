@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { toISODate } from "@/lib/format";
 import { COMPARISON_PERIODS, previousRange, trailingRange, type ComparisonPeriod } from "@/lib/periods";
@@ -45,9 +45,13 @@ const FiltersContext = createContext<FiltersContextValue | null>(null);
 
 export function FiltersProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<Filters>(defaults);
+  const restored = useRef(false);
+  const [ready, setReady] = useState(false);
 
   // Restore after hydration so server and client markup match.
   useEffect(() => {
+    if (restored.current) return;
+    restored.current = true;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
@@ -57,12 +61,15 @@ export function FiltersProvider({ children }: { children: ReactNode }) {
       setState({ ...defaults(), ...saved, ...range });
     } catch {
       /* ignore */
+    } finally {
+      setReady(true);
     }
   }, []);
 
   useEffect(() => {
+    if (!ready) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [state]);
+  }, [state, ready]);
 
   const value = useMemo<FiltersContextValue>(() => {
     const { days, prevFrom, prevTo } = previousRange(state.from, state.to);
