@@ -37,7 +37,7 @@ export function KpiCard({ label, value, delta, invert, hint, icon: Icon, spark, 
           <div className="num text-2xl font-semibold text-foreground">{value}</div>
           <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
             {delta != null && Number.isFinite(delta) && (
-              <span className={cn("inline-flex items-center gap-0.5 num font-medium", good ? "text-success" : "text-destructive")}>
+              <span className={cn("inline-flex flex-wrap items-center gap-0.5 num font-medium", delta === 0 ? "text-muted-foreground" : good ? "text-success" : "text-destructive")}>
                 {delta >= 0 ? <ArrowUpRight className="size-3.5" /> : <ArrowDownRight className="size-3.5" />}
                 {fmtPct(Math.abs(delta))} <span className="font-normal text-muted-foreground">vs. previous period</span>
               </span>

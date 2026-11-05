@@ -28,6 +28,7 @@ function SocialPage() {
   const opts = { platforms, countries: f.countries };
 
   const trend = useSocial(grain, opts);
+  const previousTrend = useSocial(grain, { ...opts, from: f.prevFrom, to: f.prevTo });
   const all = useSocial("all", opts);
   const prev = useSocial("all", { ...opts, from: f.prevFrom, to: f.prevTo });
   const byPlatform = useSocial("platform", opts);
@@ -102,13 +103,13 @@ function SocialPage() {
         <KpiCard label="New followers" value={fmtCompact(Number(cur?.new_followers ?? 0))} delta={pctChange(Number(cur?.new_followers ?? 0), Number(pre?.new_followers ?? 0))} />
         <KpiCard label="Impressions" value={fmtCompact(Number(cur?.impressions ?? 0))} delta={pctChange(Number(cur?.impressions ?? 0), Number(pre?.impressions ?? 0))} spark={(trend.data ?? []).map((r) => Number(r.impressions))} />
         <KpiCard label="Engagements" value={fmtCompact(Number(cur?.engagements ?? 0))} delta={pctChange(Number(cur?.engagements ?? 0), Number(pre?.engagements ?? 0))} color="var(--chart-2)" spark={(trend.data ?? []).map((r) => Number(r.engagements))} />
-        <KpiCard label="Engagement rate" value={fmtPct(safeDiv(Number(cur?.engagements ?? 0), Number(cur?.impressions ?? 0)), 2)} />
+        <KpiCard label="Engagement rate" value={fmtPct(safeDiv(Number(cur?.engagements ?? 0), Number(cur?.impressions ?? 0)), 2)} delta={pctChange(safeDiv(Number(cur?.engagements ?? 0), Number(cur?.impressions ?? 0)), safeDiv(Number(pre?.engagements ?? 0), Number(pre?.impressions ?? 0)))} />
         <KpiCard label="Posts published" value={fmtNum(published.length)} hint={`${scheduled.length} scheduled`} />
       </KpiGrid>
 
       <div className="grid gap-4 xl:grid-cols-3">
         <ChartCard title="Reach & engagement" subtitle={grain === "week" ? "Weekly" : "Daily"} className="xl:col-span-2">
-          <TrendChart data={(trend.data ?? []).map((r) => ({ key: r.key, impressions: Number(r.impressions), engagements: Number(r.engagements) }))} series={[{ key: "impressions", label: "Impressions" }, { key: "engagements", label: "Engagements", axis: "right", color: "var(--chart-2)" }]} height={260} />
+          <TrendChart previousData={(previousTrend.data ?? []).map((r) => ({ key: r.key, impressions: Number(r.impressions), engagements: Number(r.engagements) }))} data={(trend.data ?? []).map((r) => ({ key: r.key, impressions: Number(r.impressions), engagements: Number(r.engagements) }))} series={[{ key: "impressions", label: "Impressions" }, { key: "engagements", label: "Engagements", axis: "right", color: "var(--chart-2)" }]} height={260} />
         </ChartCard>
         <ChartCard title="Audience by platform">
           <DonutChart data={(byPlatform.data ?? []).map((r) => ({ name: socialLabel(r.key), id: r.key, value: Number(r.followers ?? 0), color: socialColor(r.key) }))} height={170} onSliceClick={(d) => d.id && setPlatforms([d.id])} />

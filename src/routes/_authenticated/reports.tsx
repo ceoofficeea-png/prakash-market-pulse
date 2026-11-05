@@ -27,11 +27,12 @@ function ReportsPage() {
   const qc = useQueryClient();
   const me = useCurrentUser();
   const { country, member } = useLookups();
-  const monthly = useMetrics("month", { from: f.prevFrom });
+  const monthly = useMetrics("month");
   const cur = useMetrics("all");
   const prev = useMetrics("all", { from: f.prevFrom, to: f.prevTo });
   const byRegion = useMetrics("region");
   const web = useWeb("all");
+  const previousWeb = useWeb("all", { from: f.prevFrom, to: f.prevTo });
   const leads = useLeads();
   const comps = useCompetitors();
   const insights = useInsights();
@@ -106,13 +107,13 @@ function ReportsPage() {
       <KpiGrid cols={4}>
         <KpiCard label="Won deals value" value={fmtUsd(crm.won, true)} hint={`win rate ${fmtPct(crm.winRate)}`} />
         <KpiCard label="Paid leads" value={fmtNum(c.leads)} delta={pctChange(c.leads, p.leads)} />
-        <KpiCard label="Website sessions" value={fmtCompact(sessions)} />
+        <KpiCard label="Website sessions" value={fmtCompact(sessions)} delta={pctChange(sessions, Number(previousWeb.data?.[0]?.sessions ?? 0))} />
         <KpiCard label="Global market share" value={`${self?.market_share ?? 0}%`} hint="estimate" />
       </KpiGrid>
 
       <div className="grid gap-4 xl:grid-cols-3">
         <ChartCard title="Monthly investment & return" className="xl:col-span-2">
-          <TrendChart data={(monthly.data ?? []).map((r) => ({ key: r.key, spend: Number(r.spend), revenue: Number(r.revenue) }))} series={[{ key: "spend", label: "Spend" }, { key: "revenue", label: "Revenue", color: "var(--chart-3)" }]} fmt={(v) => fmtUsd(v, true)} height={260} />
+          <TrendChart previousData={[{ spend: p.spend, revenue: p.revenue }]} data={(monthly.data ?? []).map((r) => ({ key: r.key, spend: Number(r.spend), revenue: Number(r.revenue) }))} series={[{ key: "spend", label: "Spend" }, { key: "revenue", label: "Revenue", color: "var(--chart-3)" }]} fmt={(v) => fmtUsd(v, true)} height={260} />
         </ChartCard>
         <ChartCard title="Revenue by region">
           <BarsChart data={(byRegion.data ?? []).map((r) => ({ key: r.key, revenue: Math.round(Number(r.revenue)) }))} series={[{ key: "revenue", label: "Revenue" }]} horizontal colorByIndex fmt={(v) => fmtUsd(v, true)} height={260} />

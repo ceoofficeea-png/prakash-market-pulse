@@ -51,6 +51,7 @@ function AdsPage() {
   const [metric, setMetric] = useState<Metric>("spend");
   const grain = grainFor(f.days);
 
+  const previousPlatforms = useMetrics("platform", { from: f.prevFrom, to: f.prevTo });
   const all = useMetrics("all");
   const prev = useMetrics("all", { from: f.prevFrom, to: f.prevTo });
   const byPlatform = useMetrics("platform");
@@ -124,6 +125,7 @@ function AdsPage() {
         >
           <LinesChart
             data={trend}
+            previousData={[Object.fromEntries((previousPlatforms.data ?? []).map((r) => [r.key, Number(r[metric])]))]}
             series={visiblePlatforms.map((pl) => ({ key: pl.id, label: pl.label, color: pl.color }))}
             fmt={metric === "spend" ? (v) => fmtUsd(v, true) : fmtCompact}
             height={290}

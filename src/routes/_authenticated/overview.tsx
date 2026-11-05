@@ -24,6 +24,7 @@ function Overview() {
   const grain = grainFor(f.days);
 
   const trend = useMetrics(grain);
+  const previousTrend = useMetrics(grain, { from: f.prevFrom, to: f.prevTo });
   const prev = useMetrics("all", { from: f.prevFrom, to: f.prevTo });
   const byPlatform = useMetrics("platform");
   const byCountry = useMetrics("country");
@@ -93,6 +94,7 @@ function Overview() {
         <ChartCard title="Spend vs leads" subtitle={`${grain === "week" ? "Weekly" : "Daily"} · paid media`} className="xl:col-span-2">
           <TrendChart
             data={series}
+            previousData={(previousTrend.data ?? []).map((r) => ({ key: r.key, spend: Number(r.spend), leads: Number(r.leads) }))}
             series={[
               { key: "spend", label: "Spend", color: "var(--chart-1)" },
               { key: "leads", label: "Leads", color: "var(--chart-2)", axis: "right" },
