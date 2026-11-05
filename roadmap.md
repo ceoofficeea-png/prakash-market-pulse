@@ -24,7 +24,7 @@
 - Live AI analysis
 
 ## Dashboard expansion
-- [ ] Global daily/weekly/monthly/quarterly/yearly comparisons and KPI/trend indicators
-- [ ] Social multi-account selector, Snapchat/X channel metrics
-- [ ] Demo WhatsApp analytics card and tab
-- [ ] Verify period rules and signed-in dashboard interactions
+- [x] Global daily/weekly/monthly/quarterly/yearly comparisons and KPI/trend indicators (unavailable history explicitly shown as —)
+- [x] Social multi-account selector, Snapchat/X channel metrics
+- [x] Demo WhatsApp analytics card and tab
+- [x] Verify period rules and signed-in dashboard interactions
