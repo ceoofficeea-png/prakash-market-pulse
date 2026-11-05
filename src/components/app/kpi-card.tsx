@@ -35,13 +35,14 @@ export function KpiCard({ label, value, delta, invert, hint, icon: Icon, spark, 
       <div className="mt-2 flex items-end justify-between gap-3">
         <div>
           <div className="num text-2xl font-semibold text-foreground">{value}</div>
-          <div className="mt-1 flex items-center gap-2 text-xs">
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
             {delta != null && Number.isFinite(delta) && (
               <span className={cn("inline-flex items-center gap-0.5 num font-medium", good ? "text-success" : "text-destructive")}>
                 {delta >= 0 ? <ArrowUpRight className="size-3.5" /> : <ArrowDownRight className="size-3.5" />}
-                {fmtPct(Math.abs(delta))}
+                {fmtPct(Math.abs(delta))} <span className="font-normal text-muted-foreground">vs. previous period</span>
               </span>
             )}
+            {(delta == null || !Number.isFinite(delta)) && <span className="text-muted-foreground" title="No comparable previous-period value is available">vs. previous period: —</span>}
             {hint && <span className="text-muted-foreground">{hint}</span>}
           </div>
         </div>
