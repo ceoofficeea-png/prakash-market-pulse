@@ -16,7 +16,7 @@ import { can } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/campaigns/")({
-  head: () => ({ meta: [{ title: "Campaigns — Prakash Pump" }] }),
+  head: () => ({ meta: [{"title": "Campaigns \u2014 Prakash Pump"}, {"name": "description", "content": "Campaigns analytics and records for the Prakash Pump marketing team."}, {"property": "og:title", "content": "Campaigns \u2014 Prakash Pump"}, {"property": "og:description", "content": "Campaigns analytics and records for the Prakash Pump marketing team."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary_large_image"}] }),
   component: CampaignsPage,
 });
 

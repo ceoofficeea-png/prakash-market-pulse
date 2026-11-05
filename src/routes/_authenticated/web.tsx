@@ -13,7 +13,7 @@ import { CHART_COLORS, fmtCompact, fmtDuration, fmtNum, fmtPct, grainFor, pctCha
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/web")({
-  head: () => ({ meta: [{ title: "Website & SEO Analytics — Prakash Pump" }] }),
+  head: () => ({ meta: [{"title": "Website & SEO Analytics \u2014 Prakash Pump"}, {"name": "description", "content": "Website & SEO Analytics analytics and records for the Prakash Pump marketing team."}, {"property": "og:title", "content": "Website & SEO Analytics \u2014 Prakash Pump"}, {"property": "og:description", "content": "Website & SEO Analytics analytics and records for the Prakash Pump marketing team."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary_large_image"}] }),
   component: WebPage,
 });
 

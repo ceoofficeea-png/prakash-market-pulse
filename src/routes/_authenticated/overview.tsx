@@ -12,7 +12,7 @@ import { inRange, useFilters } from "@/lib/filters";
 import { fmtCompact, fmtNum, grainFor, fmtPct, fmtUsd, LEAD_STAGES, pctChange, platformColor, platformLabel, safeDiv } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/overview")({
-  head: () => ({ meta: [{ title: "Executive Overview — Prakash Pump" }] }),
+  head: () => ({ meta: [{"title": "Executive Overview \u2014 Prakash Pump"}, {"name": "description", "content": "Executive Overview analytics and records for the Prakash Pump marketing team."}, {"property": "og:title", "content": "Executive Overview \u2014 Prakash Pump"}, {"property": "og:description", "content": "Executive Overview analytics and records for the Prakash Pump marketing team."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary_large_image"}] }),
   component: Overview,
 });
 

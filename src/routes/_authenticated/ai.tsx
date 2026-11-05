@@ -18,7 +18,7 @@ import { fmtDateTime } from "@/lib/format";
 import { can } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/ai")({
-  head: () => ({ meta: [{ title: "AI Marketing Intelligence — Prakash Pump" }] }),
+  head: () => ({ meta: [{"title": "AI Marketing Intelligence \u2014 Prakash Pump"}, {"name": "description", "content": "AI Marketing Intelligence analytics and records for the Prakash Pump marketing team."}, {"property": "og:title", "content": "AI Marketing Intelligence \u2014 Prakash Pump"}, {"property": "og:description", "content": "AI Marketing Intelligence analytics and records for the Prakash Pump marketing team."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary_large_image"}] }),
   component: AiPage,
 });
 

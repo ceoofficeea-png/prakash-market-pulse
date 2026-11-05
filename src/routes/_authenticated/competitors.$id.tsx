@@ -8,7 +8,7 @@ import { useCompetitorActivities, useCompetitorMonthly, useCompetitors, useLooku
 import { fmtCompact, fmtDate, fmtUsd } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/competitors/$id")({
-  head: () => ({ meta: [{ title: "Competitor profile — Prakash Pump" }] }),
+  head: () => ({ meta: [{"title": "Competitor profile \u2014 Prakash Pump"}, {"name": "description", "content": "Competitor profile analytics and records for the Prakash Pump marketing team."}, {"property": "og:title", "content": "Competitor profile \u2014 Prakash Pump"}, {"property": "og:description", "content": "Competitor profile analytics and records for the Prakash Pump marketing team."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary_large_image"}] }),
   component: CompetitorDetail,
 });
 

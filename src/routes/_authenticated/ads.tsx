@@ -13,7 +13,7 @@ import { fmtCompact, fmtNum, fmtPct, fmtUsd, grainFor, pctChange, PLATFORMS, pla
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/ads")({
-  head: () => ({ meta: [{ title: "Google & Meta Ads — Prakash Pump" }] }),
+  head: () => ({ meta: [{"title": "Google & Meta Ads \u2014 Prakash Pump"}, {"name": "description", "content": "Google & Meta Ads analytics and records for the Prakash Pump marketing team."}, {"property": "og:title", "content": "Google & Meta Ads \u2014 Prakash Pump"}, {"property": "og:description", "content": "Google & Meta Ads analytics and records for the Prakash Pump marketing team."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary_large_image"}] }),
   component: AdsPage,
 });
 

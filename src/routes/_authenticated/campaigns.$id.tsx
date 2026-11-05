@@ -14,7 +14,7 @@ import { CAMPAIGN_STATUSES, fmtCompact, fmtDate, fmtNum, fmtPct, fmtUsd, platfor
 import { can } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/campaigns/$id")({
-  head: () => ({ meta: [{ title: "Campaign detail — Prakash Pump" }] }),
+  head: () => ({ meta: [{"title": "Campaign detail \u2014 Prakash Pump"}, {"name": "description", "content": "Campaign detail analytics and records for the Prakash Pump marketing team."}, {"property": "og:title", "content": "Campaign detail \u2014 Prakash Pump"}, {"property": "og:description", "content": "Campaign detail analytics and records for the Prakash Pump marketing team."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary_large_image"}] }),
   component: CampaignDetail,
 });
 

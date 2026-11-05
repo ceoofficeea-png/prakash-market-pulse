@@ -14,7 +14,7 @@ import { fmtCompact, fmtDateTime, fmtNum, fmtPct, grainFor, pctChange, safeDiv, 
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/social/")({
-  head: () => ({ meta: [{ title: "Social Media Management — Prakash Pump" }] }),
+  head: () => ({ meta: [{"title": "Social Media Management \u2014 Prakash Pump"}, {"name": "description", "content": "Social Media Management analytics and records for the Prakash Pump marketing team."}, {"property": "og:title", "content": "Social Media Management \u2014 Prakash Pump"}, {"property": "og:description", "content": "Social Media Management analytics and records for the Prakash Pump marketing team."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary_large_image"}] }),
   component: SocialPage,
 });
 

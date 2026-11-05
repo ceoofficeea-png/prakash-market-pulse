@@ -13,7 +13,7 @@ import { can } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/content/$id")({
-  head: () => ({ meta: [{ title: "Content detail — Prakash Pump" }] }),
+  head: () => ({ meta: [{"title": "Content detail \u2014 Prakash Pump"}, {"name": "description", "content": "Content detail analytics and records for the Prakash Pump marketing team."}, {"property": "og:title", "content": "Content detail \u2014 Prakash Pump"}, {"property": "og:description", "content": "Content detail analytics and records for the Prakash Pump marketing team."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary_large_image"}] }),
   component: ContentDetail,
 });
 

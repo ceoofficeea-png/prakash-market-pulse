@@ -14,7 +14,7 @@ import { fmtNum, fmtPct, initials, safeDiv } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/team/")({
-  head: () => ({ meta: [{ title: "Marketing Team Performance — Prakash Pump" }] }),
+  head: () => ({ meta: [{"title": "Marketing Team Performance \u2014 Prakash Pump"}, {"name": "description", "content": "Marketing Team Performance analytics and records for the Prakash Pump marketing team."}, {"property": "og:title", "content": "Marketing Team Performance \u2014 Prakash Pump"}, {"property": "og:description", "content": "Marketing Team Performance analytics and records for the Prakash Pump marketing team."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary_large_image"}] }),
   component: TeamPage,
 });
 

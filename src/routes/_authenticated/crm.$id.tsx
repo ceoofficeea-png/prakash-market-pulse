@@ -17,7 +17,7 @@ import { can } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/crm/$id")({
-  head: () => ({ meta: [{ title: "Lead detail — Prakash Pump" }] }),
+  head: () => ({ meta: [{"title": "Lead detail \u2014 Prakash Pump"}, {"name": "description", "content": "Lead detail analytics and records for the Prakash Pump marketing team."}, {"property": "og:title", "content": "Lead detail \u2014 Prakash Pump"}, {"property": "og:description", "content": "Lead detail analytics and records for the Prakash Pump marketing team."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary_large_image"}] }),
   component: LeadDetail,
 });
 

@@ -18,7 +18,7 @@ import { fmtDate, initials } from "@/lib/format";
 import { can, primaryRole, ROLES, type AppRole } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
-  head: () => ({ meta: [{ title: "Administration — Prakash Pump" }] }),
+  head: () => ({ meta: [{"title": "Administration \u2014 Prakash Pump"}, {"name": "description", "content": "Administration analytics and records for the Prakash Pump marketing team."}, {"property": "og:title", "content": "Administration \u2014 Prakash Pump"}, {"property": "og:description", "content": "Administration analytics and records for the Prakash Pump marketing team."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary_large_image"}] }),
   component: AdminPage,
 });
 
