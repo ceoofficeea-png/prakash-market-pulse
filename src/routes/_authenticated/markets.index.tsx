@@ -13,7 +13,7 @@ import { fmtCompact, fmtNum, fmtPct, fmtUsd, safeDiv } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/markets/")({
-  head: () => ({ meta: [{ title: "Geography & Market Intelligence — Prakash Pump" }] }),
+  head: () => ({ meta: [{"title": "Geography & Market Intelligence \u2014 Prakash Pump"}, {"name": "description", "content": "Geography & Market Intelligence analytics and records for the Prakash Pump marketing team."}, {"property": "og:title", "content": "Geography & Market Intelligence \u2014 Prakash Pump"}, {"property": "og:description", "content": "Geography & Market Intelligence analytics and records for the Prakash Pump marketing team."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary_large_image"}] }),
   component: MarketsPage,
 });
 

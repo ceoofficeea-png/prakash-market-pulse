@@ -12,7 +12,7 @@ import { useFilters } from "@/lib/filters";
 import { CHART_COLORS, fmtCompact, fmtDate, fmtUsd } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/competitors/")({
-  head: () => ({ meta: [{ title: "Competitor Intelligence — Prakash Pump" }] }),
+  head: () => ({ meta: [{"title": "Competitor Intelligence \u2014 Prakash Pump"}, {"name": "description", "content": "Competitor Intelligence analytics and records for the Prakash Pump marketing team."}, {"property": "og:title", "content": "Competitor Intelligence \u2014 Prakash Pump"}, {"property": "og:description", "content": "Competitor Intelligence analytics and records for the Prakash Pump marketing team."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary_large_image"}] }),
   component: CompetitorsPage,
 });
 

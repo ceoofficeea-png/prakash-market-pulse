@@ -10,6 +10,7 @@ import { useLookups } from "@/lib/api";
 import { useFilters, type DatePreset } from "@/lib/filters";
 import { fmtShortDate, PLATFORMS, toISODate } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { COMPARISON_PERIODS } from "@/lib/periods";
 
 export type FilterKind = "date" | "country" | "platform" | "campaign";
 
@@ -29,23 +30,28 @@ export function FilterBar({ show = ["date", "country", "platform", "campaign"] }
   return (
     <div className="flex flex-wrap items-center gap-2">
       {show.includes("date") && (
+        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-0.5 rounded-md border border-border bg-surface p-0.5" aria-label="Comparison period">
+          {COMPARISON_PERIODS.map((p) => <Button key={p.id} variant={f.comparison === p.id ? "default" : "ghost"} size="sm" className="h-7 px-2 text-xs" aria-pressed={f.comparison === p.id} title={`Last ${p.days} days vs previous ${p.days} days`} onClick={() => { setRange(undefined); f.setComparison(p.id); }}>{p.label}</Button>)}
+        </div>
         <div className="flex items-center gap-1 rounded-md border border-border bg-surface p-0.5">
           {PRESETS.map((p) => (
-            <button
+            <Button
               key={p.id}
               type="button"
-              onClick={() => f.setPreset(p.id)}
+              variant="ghost" size="sm"
+              onClick={() => { setRange(undefined); f.setPreset(p.id); }}
               className={cn(
                 "num rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground",
                 f.preset === p.id && "bg-primary text-primary-foreground hover:text-primary-foreground",
               )}
             >
               {p.label}
-            </button>
+            </Button>
           ))}
           <Popover>
             <PopoverTrigger asChild>
-              <button
+              <Button variant="ghost" size="sm"
                 type="button"
                 className={cn(
                   "flex items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground hover:text-foreground",
@@ -56,7 +62,7 @@ export function FilterBar({ show = ["date", "country", "platform", "campaign"] }
                 <span className="num">
                   {fmtShortDate(f.from)} – {fmtShortDate(f.to)}
                 </span>
-              </button>
+              </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="end">
               <Calendar
@@ -71,6 +77,8 @@ export function FilterBar({ show = ["date", "country", "platform", "campaign"] }
               />
             </PopoverContent>
           </Popover>
+        </div>
+        <span className="text-xs text-muted-foreground">vs. {fmtShortDate(f.prevFrom)} – {fmtShortDate(f.prevTo)}</span>
         </div>
       )}
       {show.includes("country") && (

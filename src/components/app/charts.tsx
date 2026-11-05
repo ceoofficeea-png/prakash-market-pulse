@@ -18,7 +18,7 @@ import {
   type TooltipProps,
 } from "recharts";
 
-import { CHART_COLORS, fmtCompact, fmtShortDate } from "@/lib/format";
+import { CHART_COLORS, fmtCompact, fmtShortDate, pctChange, fmtPct } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export function ChartCard({
@@ -78,6 +78,14 @@ export interface Series {
 
 const isDateKey = (v: unknown) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v);
 
+function TrendComparison({ data, previousData, series }: { data: Record<string, unknown>[]; previousData?: Record<string, unknown>[] | undefined; series: Series[] }) {
+  return <div className="mb-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">{series.map((s) => {
+    const total = (rows: Record<string, unknown>[]) => rows.reduce((n, r) => n + Number(r[s.key] ?? 0), 0);
+    const delta = previousData?.length ? pctChange(total(data), total(previousData)) : null;
+    return <span key={s.key}>{s.label}: <span className={delta == null || delta === 0 ? "text-muted-foreground" : delta > 0 ? "text-success" : "text-destructive"}>{delta == null ? "—" : `${delta > 0 ? "+" : ""}${fmtPct(delta)}`}</span> vs. previous period</span>;
+  })}</div>;
+}
+
 export function TrendChart({
   data,
   xKey = "key",
@@ -86,6 +94,7 @@ export function TrendChart({
   fmt,
   rightFmt,
   stacked,
+  previousData,
 }: {
   data: Record<string, unknown>[];
   xKey?: string | undefined;
@@ -94,11 +103,12 @@ export function TrendChart({
   fmt?: Fmt | undefined;
   rightFmt?: Fmt | undefined;
   stacked?: boolean | undefined;
+  previousData?: Record<string, unknown>[] | undefined;
 }) {
   const hasRight = series.some((s) => s.axis === "right");
   const tickFmt = (v: string) => (isDateKey(v) ? fmtShortDate(v) : v);
   return (
-    <ResponsiveContainer width="100%" height={height}>
+    <><TrendComparison data={data} previousData={previousData} series={series} /><ResponsiveContainer width="100%" height={height}>
       <AreaChart data={data} margin={{ top: 4, right: hasRight ? 0 : 8, left: -8, bottom: 0 }}>
         <defs>
           {series.map((s, i) => (
@@ -131,14 +141,14 @@ export function TrendChart({
           />
         ))}
       </AreaChart>
-    </ResponsiveContainer>
+    </ResponsiveContainer></>
   );
 }
 
-export function LinesChart({ data, xKey = "key", series, height = 260, fmt }: { data: Record<string, unknown>[]; xKey?: string | undefined; series: Series[]; height?: number | undefined; fmt?: Fmt | undefined }) {
+export function LinesChart({ data, previousData, xKey = "key", series, height = 260, fmt }: { data: Record<string, unknown>[]; previousData?: Record<string, unknown>[] | undefined; xKey?: string | undefined; series: Series[]; height?: number | undefined; fmt?: Fmt | undefined }) {
   const tickFmt = (v: string) => (isDateKey(v) ? fmtShortDate(v) : v);
   return (
-    <ResponsiveContainer width="100%" height={height}>
+    <><TrendComparison data={data} previousData={previousData} series={series} /><ResponsiveContainer width="100%" height={height}>
       <LineChart data={data} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
         <CartesianGrid vertical={false} strokeDasharray="3 3" />
         <XAxis dataKey={xKey} tickFormatter={tickFmt} tickLine={false} axisLine={false} minTickGap={24} />
@@ -149,7 +159,7 @@ export function LinesChart({ data, xKey = "key", series, height = 260, fmt }: { 
           <Line key={s.key} type="monotone" dataKey={s.key} name={s.label} stroke={s.color ?? CHART_COLORS[i]} strokeWidth={2} dot={false} isAnimationActive={false} />
         ))}
       </LineChart>
-    </ResponsiveContainer>
+    </ResponsiveContainer></>
   );
 }
 

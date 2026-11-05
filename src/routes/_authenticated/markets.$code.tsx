@@ -9,7 +9,7 @@ import { inRange, useFilters } from "@/lib/filters";
 import { fmtCompact, fmtDate, fmtNum, fmtUsd, grainFor, platformColor, platformLabel, safeDiv } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/markets/$code")({
-  head: () => ({ meta: [{ title: "Market detail — Prakash Pump" }] }),
+  head: () => ({ meta: [{"title": "Market detail \u2014 Prakash Pump"}, {"name": "description", "content": "Market detail analytics and records for the Prakash Pump marketing team."}, {"property": "og:title", "content": "Market detail \u2014 Prakash Pump"}, {"property": "og:description", "content": "Market detail analytics and records for the Prakash Pump marketing team."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary_large_image"}] }),
   component: MarketDetail,
 });
 

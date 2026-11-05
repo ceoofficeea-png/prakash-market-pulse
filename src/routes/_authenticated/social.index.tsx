@@ -7,13 +7,14 @@ import { DataTable } from "@/components/app/data-table";
 import { KpiCard } from "@/components/app/kpi-card";
 import { DemoNote, KpiGrid, PageHeader } from "@/components/app/page";
 import { StatusBadge } from "@/components/app/status-badge";
+import { SocialAnalytics } from "@/components/app/social-analytics";
 import { useLookups, useSocial, useSocialAccounts, useSocialPosts } from "@/lib/api";
 import { inRange, useFilters } from "@/lib/filters";
 import { fmtCompact, fmtDateTime, fmtNum, fmtPct, grainFor, pctChange, safeDiv, SOCIAL_PLATFORMS, socialColor, socialLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/social/")({
-  head: () => ({ meta: [{ title: "Social Media Management — Prakash Pump" }] }),
+  head: () => ({ meta: [{"title": "Social Media Management \u2014 Prakash Pump"}, {"name": "description", "content": "Social Media Management analytics and records for the Prakash Pump marketing team."}, {"property": "og:title", "content": "Social Media Management \u2014 Prakash Pump"}, {"property": "og:description", "content": "Social Media Management analytics and records for the Prakash Pump marketing team."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary_large_image"}] }),
   component: SocialPage,
 });
 
@@ -27,6 +28,7 @@ function SocialPage() {
   const opts = { platforms, countries: f.countries };
 
   const trend = useSocial(grain, opts);
+  const previousTrend = useSocial(grain, { ...opts, from: f.prevFrom, to: f.prevTo });
   const all = useSocial("all", opts);
   const prev = useSocial("all", { ...opts, from: f.prevFrom, to: f.prevTo });
   const byPlatform = useSocial("platform", opts);
@@ -70,10 +72,12 @@ function SocialPage() {
       <PageHeader
         eyebrow="02 · Social Media Management"
         title="Social media"
-        description="Audience, engagement and publishing across LinkedIn, Facebook, Instagram, YouTube and X."
+        description="Audience, engagement and publishing across Facebook, Instagram, Snapchat, X, LinkedIn, YouTube and WhatsApp Business."
         filters={["date", "country"]}
       />
 
+      <SocialAnalytics />
+      <h2 className="mb-3 text-sm font-semibold">Publishing & shared account records</h2>
       <div className="mb-4 flex flex-wrap gap-2">
         {SOCIAL_PLATFORMS.map((p) => {
           const on = platforms.includes(p.id);
@@ -100,13 +104,13 @@ function SocialPage() {
         <KpiCard label="New followers" value={fmtCompact(Number(cur?.new_followers ?? 0))} delta={pctChange(Number(cur?.new_followers ?? 0), Number(pre?.new_followers ?? 0))} />
         <KpiCard label="Impressions" value={fmtCompact(Number(cur?.impressions ?? 0))} delta={pctChange(Number(cur?.impressions ?? 0), Number(pre?.impressions ?? 0))} spark={(trend.data ?? []).map((r) => Number(r.impressions))} />
         <KpiCard label="Engagements" value={fmtCompact(Number(cur?.engagements ?? 0))} delta={pctChange(Number(cur?.engagements ?? 0), Number(pre?.engagements ?? 0))} color="var(--chart-2)" spark={(trend.data ?? []).map((r) => Number(r.engagements))} />
-        <KpiCard label="Engagement rate" value={fmtPct(safeDiv(Number(cur?.engagements ?? 0), Number(cur?.impressions ?? 0)), 2)} />
+        <KpiCard label="Engagement rate" value={fmtPct(safeDiv(Number(cur?.engagements ?? 0), Number(cur?.impressions ?? 0)), 2)} delta={pctChange(safeDiv(Number(cur?.engagements ?? 0), Number(cur?.impressions ?? 0)), safeDiv(Number(pre?.engagements ?? 0), Number(pre?.impressions ?? 0)))} />
         <KpiCard label="Posts published" value={fmtNum(published.length)} hint={`${scheduled.length} scheduled`} />
       </KpiGrid>
 
       <div className="grid gap-4 xl:grid-cols-3">
         <ChartCard title="Reach & engagement" subtitle={grain === "week" ? "Weekly" : "Daily"} className="xl:col-span-2">
-          <TrendChart data={(trend.data ?? []).map((r) => ({ key: r.key, impressions: Number(r.impressions), engagements: Number(r.engagements) }))} series={[{ key: "impressions", label: "Impressions" }, { key: "engagements", label: "Engagements", axis: "right", color: "var(--chart-2)" }]} height={260} />
+          <TrendChart previousData={(previousTrend.data ?? []).map((r) => ({ key: r.key, impressions: Number(r.impressions), engagements: Number(r.engagements) }))} data={(trend.data ?? []).map((r) => ({ key: r.key, impressions: Number(r.impressions), engagements: Number(r.engagements) }))} series={[{ key: "impressions", label: "Impressions" }, { key: "engagements", label: "Engagements", axis: "right", color: "var(--chart-2)" }]} height={260} />
         </ChartCard>
         <ChartCard title="Audience by platform">
           <DonutChart data={(byPlatform.data ?? []).map((r) => ({ name: socialLabel(r.key), id: r.key, value: Number(r.followers ?? 0), color: socialColor(r.key) }))} height={170} onSliceClick={(d) => d.id && setPlatforms([d.id])} />

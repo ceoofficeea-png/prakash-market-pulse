@@ -15,7 +15,7 @@ import { fmtDate, fmtNum, fmtPct, fmtUsd, initials, TASK_STATUSES } from "@/lib/
 import { can } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/team/$id")({
-  head: () => ({ meta: [{ title: "Team member — Prakash Pump" }] }),
+  head: () => ({ meta: [{"title": "Team member \u2014 Prakash Pump"}, {"name": "description", "content": "Team member analytics and records for the Prakash Pump marketing team."}, {"property": "og:title", "content": "Team member \u2014 Prakash Pump"}, {"property": "og:description", "content": "Team member analytics and records for the Prakash Pump marketing team."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary_large_image"}] }),
   component: MemberDetail,
 });
 

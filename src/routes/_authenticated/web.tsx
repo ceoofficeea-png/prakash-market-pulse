@@ -13,7 +13,7 @@ import { CHART_COLORS, fmtCompact, fmtDuration, fmtNum, fmtPct, grainFor, pctCha
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/web")({
-  head: () => ({ meta: [{ title: "Website & SEO Analytics — Prakash Pump" }] }),
+  head: () => ({ meta: [{"title": "Website & SEO Analytics \u2014 Prakash Pump"}, {"name": "description", "content": "Website & SEO Analytics analytics and records for the Prakash Pump marketing team."}, {"property": "og:title", "content": "Website & SEO Analytics \u2014 Prakash Pump"}, {"property": "og:description", "content": "Website & SEO Analytics analytics and records for the Prakash Pump marketing team."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary_large_image"}] }),
   component: WebPage,
 });
 
@@ -26,6 +26,7 @@ function WebPage() {
   const all = useWeb("all", { sources });
   const prev = useWeb("all", { sources, from: f.prevFrom, to: f.prevTo });
   const trend = useWeb(grain, { sources });
+  const previousTrend = useWeb(grain, { sources, from: f.prevFrom, to: f.prevTo });
   const bySource = useWeb("source");
   const byCountry = useWeb("country", { sources });
   const pages = useWebPages();
@@ -61,15 +62,15 @@ function WebPage() {
       <KpiGrid cols={6}>
         <KpiCard label="Sessions" value={fmtCompact(n(c?.sessions))} delta={pctChange(n(c?.sessions), n(p?.sessions))} spark={(trend.data ?? []).map((r) => n(r.sessions))} />
         <KpiCard label="Users" value={fmtCompact(n(c?.users))} delta={pctChange(n(c?.users), n(p?.users))} />
-        <KpiCard label="New users" value={fmtPct(safeDiv(n(c?.new_users), n(c?.users)))} hint="of users" />
+        <KpiCard label="New users" value={fmtPct(safeDiv(n(c?.new_users), n(c?.users)))} delta={pctChange(safeDiv(n(c?.new_users), n(c?.users)), safeDiv(n(p?.new_users), n(p?.users)))} hint="of users" />
         <KpiCard label="Bounce rate" value={fmtPct(n(c?.bounce_rate))} delta={pctChange(n(c?.bounce_rate), n(p?.bounce_rate))} invert />
-        <KpiCard label="Avg session" value={fmtDuration(n(c?.avg_session_sec))} />
+        <KpiCard label="Avg session" value={fmtDuration(n(c?.avg_session_sec))} delta={pctChange(n(c?.avg_session_sec), n(p?.avg_session_sec))} />
         <KpiCard label="Conversions" value={fmtNum(n(c?.conversions))} delta={pctChange(n(c?.conversions), n(p?.conversions))} hint={fmtPct(safeDiv(n(c?.conversions), n(c?.sessions)), 2) + " CVR"} color="var(--chart-3)" spark={(trend.data ?? []).map((r) => n(r.conversions))} />
       </KpiGrid>
 
       <div className="grid gap-4 xl:grid-cols-3">
         <ChartCard title="Sessions & conversions" className="xl:col-span-2">
-          <TrendChart data={(trend.data ?? []).map((r) => ({ key: r.key, sessions: n(r.sessions), conversions: n(r.conversions) }))} series={[{ key: "sessions", label: "Sessions", color: "var(--chart-2)" }, { key: "conversions", label: "Conversions", axis: "right" }]} height={260} />
+          <TrendChart previousData={(previousTrend.data ?? []).map((r) => ({ key: r.key, sessions: n(r.sessions), conversions: n(r.conversions) }))} data={(trend.data ?? []).map((r) => ({ key: r.key, sessions: n(r.sessions), conversions: n(r.conversions) }))} series={[{ key: "sessions", label: "Sessions", color: "var(--chart-2)" }, { key: "conversions", label: "Conversions", axis: "right" }]} height={260} />
         </ChartCard>
         <ChartCard title="Traffic sources" subtitle="Click to filter">
           <DonutChart data={(bySource.data ?? []).map((r) => ({ name: r.key, id: r.key, value: n(r.sessions), color: CHART_COLORS[WEB_SOURCES.indexOf(r.key) % CHART_COLORS.length] }))} height={170} onSliceClick={(d) => d.id && setSources([d.id])} />

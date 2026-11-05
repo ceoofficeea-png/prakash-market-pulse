@@ -14,7 +14,7 @@ import { useFilters } from "@/lib/filters";
 import { CONTENT_STAGES, fmtCompact, fmtDate, fmtNum, fmtPct } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/content/")({
-  head: () => ({ meta: [{ title: "Content Management — Prakash Pump" }] }),
+  head: () => ({ meta: [{"title": "Content Management \u2014 Prakash Pump"}, {"name": "description", "content": "Content Management analytics and records for the Prakash Pump marketing team."}, {"property": "og:title", "content": "Content Management \u2014 Prakash Pump"}, {"property": "og:description", "content": "Content Management analytics and records for the Prakash Pump marketing team."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary_large_image"}] }),
   component: ContentPage,
 });
 

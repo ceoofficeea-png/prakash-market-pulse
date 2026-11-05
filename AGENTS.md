@@ -16,3 +16,5 @@
 - Global filters (date range, countries, platforms, campaigns) come from `FiltersProvider` in `src/lib/filters.tsx`; pages opt in via `PageHeader filters=[...]`. Why: cross-module analysis uses the same selection.
 - Shared UI building blocks (KpiCard, ChartCard/charts, DataTable with CSV export, StatusBadge, FilterBar) live in `src/components/app/`; colours come only from tokens in `src/styles.css`.
 - tsconfig uses exactOptionalPropertyTypes + noUncheckedIndexedAccess: declare optional props as `prop?: T | undefined`.
+- Period comparisons use inclusive rolling windows and an immediately preceding equal-length window from `src/lib/periods.ts`, so every module compares consistent ranges.
+- Expanded social page and messaging analytics use isolated deterministic demo fixtures in `src/lib/social-demo.ts`; they do not claim connected provider data or change existing shared records.

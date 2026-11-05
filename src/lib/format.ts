@@ -99,6 +99,7 @@ export const SOCIAL_PLATFORMS = [
   { id: "instagram", label: "Instagram", color: "var(--chart-1)" },
   { id: "youtube", label: "YouTube", color: "var(--chart-5)" },
   { id: "x", label: "X", color: "var(--chart-6)" },
+  { id: "snapchat", label: "Snapchat", color: "var(--chart-4)" },
 ] as const;
 
 export const socialLabel = (id: string) => SOCIAL_PLATFORMS.find((p) => p.id === id)?.label ?? id;

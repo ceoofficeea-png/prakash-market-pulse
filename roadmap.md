@@ -22,3 +22,9 @@
 ## Stage 2 (later)
 - Live API integrations (Google Ads, Meta, LinkedIn, GA4, Search Console, CRM)
 - Live AI analysis
+
+## Dashboard expansion
+- [x] Global daily/weekly/monthly/quarterly/yearly comparisons and KPI/trend indicators (unavailable history explicitly shown as —)
+- [x] Social multi-account selector, Snapchat/X channel metrics
+- [x] Demo WhatsApp analytics card and tab
+- [x] Verify period rules and signed-in dashboard interactions

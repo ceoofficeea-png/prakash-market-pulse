@@ -7,7 +7,7 @@ import { useLookups, useSocialAccounts, useSocialPosts } from "@/lib/api";
 import { fmtCompact, fmtDateTime, fmtNum, fmtPct, safeDiv, socialColor, socialLabel } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/social/$postId")({
-  head: () => ({ meta: [{ title: "Social post — Prakash Pump" }] }),
+  head: () => ({ meta: [{"title": "Social post \u2014 Prakash Pump"}, {"name": "description", "content": "Social post analytics and records for the Prakash Pump marketing team."}, {"property": "og:title", "content": "Social post \u2014 Prakash Pump"}, {"property": "og:description", "content": "Social post analytics and records for the Prakash Pump marketing team."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary_large_image"}] }),
   component: PostDetail,
 });
 

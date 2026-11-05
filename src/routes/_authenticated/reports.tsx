@@ -17,7 +17,7 @@ import { downloadCsv, fmtCompact, fmtDate, fmtDateTime, fmtNum, fmtPct, fmtUsd, 
 import { can } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/reports")({
-  head: () => ({ meta: [{ title: "CEO Dashboard & Reports — Prakash Pump" }] }),
+  head: () => ({ meta: [{"title": "CEO Dashboard & Reports \u2014 Prakash Pump"}, {"name": "description", "content": "CEO Dashboard & Reports analytics and records for the Prakash Pump marketing team."}, {"property": "og:title", "content": "CEO Dashboard & Reports \u2014 Prakash Pump"}, {"property": "og:description", "content": "CEO Dashboard & Reports analytics and records for the Prakash Pump marketing team."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary_large_image"}] }),
   component: ReportsPage,
 });
 
@@ -27,11 +27,12 @@ function ReportsPage() {
   const qc = useQueryClient();
   const me = useCurrentUser();
   const { country, member } = useLookups();
-  const monthly = useMetrics("month", { from: f.prevFrom });
+  const monthly = useMetrics("month");
   const cur = useMetrics("all");
   const prev = useMetrics("all", { from: f.prevFrom, to: f.prevTo });
   const byRegion = useMetrics("region");
   const web = useWeb("all");
+  const previousWeb = useWeb("all", { from: f.prevFrom, to: f.prevTo });
   const leads = useLeads();
   const comps = useCompetitors();
   const insights = useInsights();
@@ -54,6 +55,9 @@ function ReportsPage() {
     };
   }, [leads.data, f.from, f.to, f.countries]);
 
+  const previousLeads = (leads.data ?? []).filter((l) => inRange(l.created_at, f.prevFrom, f.prevTo) && (!f.countries.length || f.countries.includes(l.country_code)));
+  const previousPipeline = previousLeads.filter((l) => !["Won", "Lost"].includes(l.stage)).reduce((n, l) => n + Number(l.deal_value), 0);
+  const previousWon = previousLeads.filter((l) => l.stage === "Won").reduce((n, l) => n + Number(l.deal_value), 0);
   const self = comps.data?.find((x) => x.is_self);
   const risks = (insights.data ?? []).filter((i) => ["Critical", "High"].includes(i.severity) && i.status !== "Dismissed").slice(0, 4);
 
@@ -101,18 +105,18 @@ function ReportsPage() {
         <KpiCard label="Marketing-sourced revenue" value={fmtUsd(c.revenue, true)} delta={pctChange(c.revenue, p.revenue)} />
         <KpiCard label="Marketing investment" value={fmtUsd(c.spend, true)} delta={pctChange(c.spend, p.spend)} />
         <KpiCard label="Return on ad spend" value={`${safeDiv(c.revenue, c.spend).toFixed(1)}×`} delta={pctChange(safeDiv(c.revenue, c.spend), safeDiv(p.revenue, p.spend))} />
-        <KpiCard label="Open pipeline" value={fmtUsd(crm.pipeline, true)} hint={`${fmtNum(crm.total)} CRM leads`} />
+        <KpiCard label="Open pipeline" value={fmtUsd(crm.pipeline, true)} delta={pctChange(crm.pipeline, previousPipeline)} hint={`${fmtNum(crm.total)} CRM leads`} />
       </KpiGrid>
       <KpiGrid cols={4}>
-        <KpiCard label="Won deals value" value={fmtUsd(crm.won, true)} hint={`win rate ${fmtPct(crm.winRate)}`} />
+        <KpiCard label="Won deals value" value={fmtUsd(crm.won, true)} delta={pctChange(crm.won, previousWon)} hint={`win rate ${fmtPct(crm.winRate)}`} />
         <KpiCard label="Paid leads" value={fmtNum(c.leads)} delta={pctChange(c.leads, p.leads)} />
-        <KpiCard label="Website sessions" value={fmtCompact(sessions)} />
+        <KpiCard label="Website sessions" value={fmtCompact(sessions)} delta={pctChange(sessions, Number(previousWeb.data?.[0]?.sessions ?? 0))} />
         <KpiCard label="Global market share" value={`${self?.market_share ?? 0}%`} hint="estimate" />
       </KpiGrid>
 
       <div className="grid gap-4 xl:grid-cols-3">
         <ChartCard title="Monthly investment & return" className="xl:col-span-2">
-          <TrendChart data={(monthly.data ?? []).map((r) => ({ key: r.key, spend: Number(r.spend), revenue: Number(r.revenue) }))} series={[{ key: "spend", label: "Spend" }, { key: "revenue", label: "Revenue", color: "var(--chart-3)" }]} fmt={(v) => fmtUsd(v, true)} height={260} />
+          <TrendChart previousData={[{ spend: p.spend, revenue: p.revenue }]} data={(monthly.data ?? []).map((r) => ({ key: r.key, spend: Number(r.spend), revenue: Number(r.revenue) }))} series={[{ key: "spend", label: "Spend" }, { key: "revenue", label: "Revenue", color: "var(--chart-3)" }]} fmt={(v) => fmtUsd(v, true)} height={260} />
         </ChartCard>
         <ChartCard title="Revenue by region">
           <BarsChart data={(byRegion.data ?? []).map((r) => ({ key: r.key, revenue: Math.round(Number(r.revenue)) }))} series={[{ key: "revenue", label: "Revenue" }]} horizontal colorByIndex fmt={(v) => fmtUsd(v, true)} height={260} />

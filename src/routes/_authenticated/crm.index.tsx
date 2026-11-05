@@ -11,11 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useLeads, useLookups, type Lead } from "@/lib/api";
 import { inRange, useFilters } from "@/lib/filters";
-import { fmtDate, fmtNum, fmtPct, fmtUsd, LEAD_STAGES, safeDiv } from "@/lib/format";
+import { fmtDate, fmtNum, fmtPct, fmtUsd, LEAD_STAGES, pctChange, safeDiv } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/crm/")({
-  head: () => ({ meta: [{ title: "CRM & Leads — Prakash Pump" }] }),
+  head: () => ({ meta: [{"title": "CRM & Leads \u2014 Prakash Pump"}, {"name": "description", "content": "CRM & Leads analytics and records for the Prakash Pump marketing team."}, {"property": "og:title", "content": "CRM & Leads \u2014 Prakash Pump"}, {"property": "og:description", "content": "CRM & Leads analytics and records for the Prakash Pump marketing team."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary_large_image"}] }),
   component: CrmPage,
 });
 
@@ -48,6 +48,11 @@ function CrmPage() {
     [leads.data, f.from, f.to, f.countries, f.campaigns, stage, owner],
   );
 
+  const previousRows = (leads.data ?? []).filter((l) => inRange(l.created_at, f.prevFrom, f.prevTo) && (!f.countries.length || f.countries.includes(l.country_code)) && (!f.campaigns.length || (l.campaign_id != null && f.campaigns.includes(l.campaign_id))) && (stage === "all" || l.stage === stage) && (owner === "all" || String(l.owner_id) === owner));
+  const previousOpen = previousRows.filter((l) => !["Won", "Lost"].includes(l.stage));
+  const previousWon = previousRows.filter((l) => l.stage === "Won");
+  const previousLost = previousRows.filter((l) => l.stage === "Lost");
+  const previousQualified = previousRows.filter((l) => ["Qualified", "Proposal", "Negotiation", "Won"].includes(l.stage));
   const open = rows.filter((l) => !["Won", "Lost"].includes(l.stage));
   const won = rows.filter((l) => l.stage === "Won");
   const lost = rows.filter((l) => l.stage === "Lost");
@@ -84,17 +89,17 @@ function CrmPage() {
       />
 
       <KpiGrid cols={6}>
-        <KpiCard label="Leads" value={fmtNum(rows.length)} />
-        <KpiCard label="Qualified rate" value={fmtPct(safeDiv(qualified.length, rows.length))} />
-        <KpiCard label="Open pipeline" value={fmtUsd(sum(open), true)} hint={`${open.length} deals`} />
-        <KpiCard label="Won value" value={fmtUsd(sum(won), true)} hint={`${won.length} deals`} />
-        <KpiCard label="Win rate" value={fmtPct(safeDiv(won.length, won.length + lost.length))} />
+        <KpiCard label="Leads" value={fmtNum(rows.length)} delta={pctChange(rows.length, previousRows.length)} />
+        <KpiCard label="Qualified rate" value={fmtPct(safeDiv(qualified.length, rows.length))} delta={pctChange(safeDiv(qualified.length, rows.length), safeDiv(previousQualified.length, previousRows.length))} />
+        <KpiCard label="Open pipeline" value={fmtUsd(sum(open), true)} delta={pctChange(sum(open), sum(previousOpen))} hint={`${open.length} deals`} />
+        <KpiCard label="Won value" value={fmtUsd(sum(won), true)} delta={pctChange(sum(won), sum(previousWon))} hint={`${won.length} deals`} />
+        <KpiCard label="Win rate" value={fmtPct(safeDiv(won.length, won.length + lost.length))} delta={pctChange(safeDiv(won.length, won.length + lost.length), safeDiv(previousWon.length, previousWon.length + previousLost.length))} />
         <KpiCard label="Idle > 14 days" value={fmtNum(stale.length)} hint={fmtUsd(sum(stale), true)} />
       </KpiGrid>
 
       <div className="grid gap-4 xl:grid-cols-3">
         <ChartCard title="New leads per week" subtitle="Count and pipeline value" className="xl:col-span-2">
-          <TrendChart data={byWeek} series={[{ key: "leads", label: "Leads", color: "var(--chart-2)" }, { key: "value", label: "Value", axis: "right" }]} rightFmt={(v) => fmtUsd(v, true)} height={240} />
+          <TrendChart previousData={[{ leads: previousRows.length, value: sum(previousRows) }]} data={byWeek} series={[{ key: "leads", label: "Leads", color: "var(--chart-2)" }, { key: "value", label: "Value", axis: "right" }]} rightFmt={(v) => fmtUsd(v, true)} height={240} />
         </ChartCard>
         <ChartCard title="Lead sources">
           <DonutChart data={bySource.map(([name, value]) => ({ name, value }))} height={170} fmt={fmtNum} />

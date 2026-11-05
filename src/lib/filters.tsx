@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { toISODate } from "@/lib/format";
+import { COMPARISON_PERIODS, previousRange, trailingRange, type ComparisonPeriod } from "@/lib/periods";
 
 export type DatePreset = "7d" | "30d" | "90d" | "180d" | "custom";
 
@@ -11,6 +12,7 @@ export interface Filters {
   countries: string[];
   platforms: string[];
   campaigns: number[];
+  comparison?: ComparisonPeriod | undefined;
 }
 
 interface FiltersContextValue extends Filters {
@@ -24,6 +26,7 @@ interface FiltersContextValue extends Filters {
   setPlatforms: (p: string[]) => void;
   setCampaigns: (c: number[]) => void;
   reset: () => void;
+  setComparison: (period: ComparisonPeriod) => void;
 }
 
 const PRESET_DAYS: Record<Exclude<DatePreset, "custom">, number> = { "7d": 7, "30d": 30, "90d": 90, "180d": 180 };
@@ -42,39 +45,45 @@ const FiltersContext = createContext<FiltersContextValue | null>(null);
 
 export function FiltersProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<Filters>(defaults);
+  const restored = useRef(false);
+  const [ready, setReady] = useState(false);
 
   // Restore after hydration so server and client markup match.
   useEffect(() => {
+    if (restored.current) return;
+    restored.current = true;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
       const saved = JSON.parse(raw) as Filters;
-      const range = saved.preset !== "custom" ? rangeFor(PRESET_DAYS[saved.preset]) : { from: saved.from, to: saved.to };
+      const period = COMPARISON_PERIODS.find((p) => p.id === saved.comparison);
+      const range = period ? trailingRange(period.days) : saved.preset !== "custom" ? rangeFor(PRESET_DAYS[saved.preset]) : { from: saved.from, to: saved.to };
       setState({ ...defaults(), ...saved, ...range });
     } catch {
       /* ignore */
+    } finally {
+      setReady(true);
     }
   }, []);
 
   useEffect(() => {
+    if (!ready) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [state]);
+  }, [state, ready]);
 
   const value = useMemo<FiltersContextValue>(() => {
-    const fromD = new Date(state.from);
-    const toD = new Date(state.to);
-    const days = Math.max(1, Math.round((toD.getTime() - fromD.getTime()) / 86400000) + 1);
-    const prevTo = new Date(fromD);
-    prevTo.setDate(prevTo.getDate() - 1);
-    const prevFrom = new Date(prevTo);
-    prevFrom.setDate(prevFrom.getDate() - (days - 1));
+    const { days, prevFrom, prevTo } = previousRange(state.from, state.to);
     return {
       ...state,
       days,
-      prevFrom: toISODate(prevFrom),
-      prevTo: toISODate(prevTo),
-      setPreset: (p) => setState((s) => ({ ...s, preset: p, ...rangeFor(PRESET_DAYS[p]) })),
-      setRange: (from, to) => setState((s) => ({ ...s, preset: "custom", from, to })),
+      prevFrom,
+      prevTo,
+      setPreset: (p) => setState((s) => ({ ...s, comparison: undefined, preset: p, ...rangeFor(PRESET_DAYS[p]) })),
+      setRange: (from, to) => setState((s) => ({ ...s, comparison: undefined, preset: "custom", from, to })),
+      setComparison: (comparison) => {
+        const period = COMPARISON_PERIODS.find((p) => p.id === comparison);
+        if (period) setState((s) => ({ ...s, comparison, preset: "custom", ...trailingRange(period.days) }));
+      },
       setCountries: (countries) => setState((s) => ({ ...s, countries })),
       setPlatforms: (platforms) => setState((s) => ({ ...s, platforms })),
       setCampaigns: (campaigns) => setState((s) => ({ ...s, campaigns })),
