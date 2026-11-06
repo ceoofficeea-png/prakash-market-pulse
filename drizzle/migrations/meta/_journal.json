@@ -36,6 +36,13 @@
       "when": 1793356634001,
       "tag": "0004_fix_seed_variety",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793935631960,
+      "tag": "0005_add_lead_avatar_context",
+      "breakpoints": true
     }
   ]
 }

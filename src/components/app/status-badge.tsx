@@ -50,6 +50,8 @@ const TONES: Record<string, Tone> = {
   "Not connected": "muted",
   Connected: "success",
   Error: "danger",
+  // lead sources
+  "Prakash AI Avatar": "signal",
   // priority tiers
   Core: "signal",
   Growth: "info",

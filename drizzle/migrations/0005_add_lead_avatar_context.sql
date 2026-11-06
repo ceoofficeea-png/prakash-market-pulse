@@ -1,0 +1,2 @@
+ALTER TABLE public.leads ADD COLUMN avatar_context jsonb;
+COMMENT ON COLUMN public.leads.avatar_context IS 'Prakash AI Avatar consultation capture: recommended_model, motor_hp, borewell_depth_m, head_m, feedback_score, whatsapp_handover_at, summary.';
