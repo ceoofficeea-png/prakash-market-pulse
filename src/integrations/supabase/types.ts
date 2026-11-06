@@ -554,6 +554,7 @@ export type Database = {
       }
       leads: {
         Row: {
+          avatar_context: Json | null
           campaign_id: number | null
           company: string
           country_code: string
@@ -573,6 +574,7 @@ export type Database = {
           stage: string
         }
         Insert: {
+          avatar_context?: Json | null
           campaign_id?: number | null
           company: string
           country_code: string
@@ -592,6 +594,7 @@ export type Database = {
           stage?: string
         }
         Update: {
+          avatar_context?: Json | null
           campaign_id?: number | null
           company?: string
           country_code?: string
