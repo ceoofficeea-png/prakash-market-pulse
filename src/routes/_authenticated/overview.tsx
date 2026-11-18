@@ -3,6 +3,7 @@ import { ArrowRight, Bot, CircleDollarSign, Globe2, MousePointerClick, Target, T
 import { useMemo } from "react";
 
 import { BarList, ChartCard, DonutChart, TrendChart } from "@/components/app/charts";
+import { AVATAR_FUNNEL, AVATAR_KPIS } from "@/lib/avatar-demo";
 import { DataTable } from "@/components/app/data-table";
 import { KpiCard } from "@/components/app/kpi-card";
 import { DemoNote, KpiGrid, PageHeader } from "@/components/app/page";
@@ -89,6 +90,27 @@ function Overview() {
         <KpiCard label="ROAS" value={`${safeDiv(cur.revenue, cur.spend).toFixed(1)}×`} delta={pctChange(safeDiv(cur.revenue, cur.spend), safeDiv(pre.revenue, pre.spend))} icon={MousePointerClick} />
         <KpiCard label="Web sessions" value={fmtCompact(sessions)} delta={pctChange(sessions, sessionsPrev)} icon={Globe2} onClick={() => navigate({ to: "/web" })} />
       </KpiGrid>
+
+      <Link to="/ai" className="panel mb-4 flex flex-wrap items-center gap-x-6 gap-y-2 p-3 transition-colors hover:border-primary/40">
+        <span className="flex items-center gap-2 text-sm font-semibold">
+          <Bot className="size-4 text-primary" /> Prakash AI Avatar
+        </span>
+        <span className="text-xs text-muted-foreground">
+          <span className="num text-foreground">{fmtNum(AVATAR_KPIS.consultations)}</span> consultations
+        </span>
+        <span className="text-xs text-muted-foreground">
+          <span className="num text-foreground">{fmtPct(AVATAR_KPIS.recommendationAccuracy)}</span> sizing accuracy
+        </span>
+        <span className="text-xs text-muted-foreground">
+          <span className="num text-foreground">{AVATAR_KPIS.avgFeedback.toFixed(1)}/5</span> feedback
+        </span>
+        <span className="text-xs text-muted-foreground">
+          <span className="num text-foreground">{fmtNum(AVATAR_FUNNEL[4]?.value ?? 0)}</span> SQLs
+        </span>
+        <span className="ml-auto flex items-center gap-1 text-xs text-primary">
+          Avatar analytics <ArrowRight className="size-3" />
+        </span>
+      </Link>
 
       <div className="grid gap-4 xl:grid-cols-3">
         <ChartCard title="Spend vs leads" subtitle={`${grain === "week" ? "Weekly" : "Daily"} · paid media`} className="xl:col-span-2">

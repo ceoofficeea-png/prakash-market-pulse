@@ -34,6 +34,7 @@ function CrmPage() {
   const [view, setView] = useState<"table" | "board">("table");
   const [stage, setStage] = useState("all");
   const [owner, setOwner] = useState("all");
+  const [source, setSource] = useState("all");
 
   const rows = useMemo(
     () =>
@@ -43,9 +44,10 @@ function CrmPage() {
           (!f.countries.length || f.countries.includes(l.country_code)) &&
           (!f.campaigns.length || (l.campaign_id != null && f.campaigns.includes(l.campaign_id))) &&
           (stage === "all" || l.stage === stage) &&
-          (owner === "all" || String(l.owner_id) === owner),
+          (owner === "all" || String(l.owner_id) === owner) &&
+          (source === "all" || l.source === source),
       ),
-    [leads.data, f.from, f.to, f.countries, f.campaigns, stage, owner],
+    [leads.data, f.from, f.to, f.countries, f.campaigns, stage, owner, source],
   );
 
   const previousRows = (leads.data ?? []).filter((l) => inRange(l.created_at, f.prevFrom, f.prevTo) && (!f.countries.length || f.countries.includes(l.country_code)) && (!f.campaigns.length || (l.campaign_id != null && f.campaigns.includes(l.campaign_id))) && (stage === "all" || l.stage === stage) && (owner === "all" || String(l.owner_id) === owner));
@@ -61,6 +63,7 @@ function CrmPage() {
   const stale = open.filter((l) => l.last_activity_at && Date.now() - new Date(l.last_activity_at).getTime() > 14 * 86400000);
 
   const bySource = Object.entries(rows.reduce<Record<string, number>>((a, l) => ({ ...a, [l.source]: (a[l.source] ?? 0) + 1 }), {})).sort((a, b) => b[1] - a[1]);
+  const allSources = [...new Set((leads.data ?? []).map((l) => l.source))].sort();
   const byCountry = Object.entries(rows.reduce<Record<string, number>>((a, l) => ({ ...a, [l.country_code]: (a[l.country_code] ?? 0) + Number(l.deal_value) }), {})).sort((a, b) => b[1] - a[1]);
   const byWeek = Object.entries(
     rows.reduce<Record<string, { leads: number; value: number }>>((a, l) => {
@@ -121,6 +124,13 @@ function CrmPage() {
             {team.map((m) => <SelectItem key={m.id} value={String(m.id)}>{m.name}</SelectItem>)}
           </SelectContent>
         </Select>
+        <Select value={source} onValueChange={setSource}>
+          <SelectTrigger className="h-8 w-52"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All sources</SelectItem>
+            {allSources.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+          </SelectContent>
+        </Select>
       </div>
 
       {view === "table" ? (
@@ -136,7 +146,7 @@ function CrmPage() {
             { key: "full_name", header: "Lead", cell: (r) => <div><div className="font-medium">{r.full_name}</div><div className="text-xs text-muted-foreground">{r.job_title} · {r.company}</div></div> },
             { key: "country_code", header: "Market", value: (r) => country(r.country_code)?.name, cell: (r) => <span className="whitespace-nowrap">{country(r.country_code)?.flag} {country(r.country_code)?.name}</span> },
             { key: "industry", header: "Industry", cell: (r) => <span className="text-xs">{r.industry}</span> },
-            { key: "source", header: "Source", cell: (r) => <div className="text-xs"><div>{r.source}</div><div className="max-w-44 truncate text-muted-foreground">{campaign(r.campaign_id)?.name}</div></div> },
+            { key: "source", header: "Source", cell: (r) => <div className="text-xs"><div>{r.source === "Prakash AI Avatar" ? <StatusBadge value={r.source} /> : r.source}</div><div className="max-w-44 truncate text-muted-foreground">{campaign(r.campaign_id)?.name}</div></div> },
             { key: "stage", header: "Stage", cell: (r) => <StatusBadge value={r.stage} /> },
             { key: "score", header: "Score", align: "right", cell: (r) => <span className={cn(r.score >= 75 ? "text-success" : r.score < 40 ? "text-muted-foreground" : "")}>{r.score}</span> },
             { key: "deal_value", header: "Value", align: "right", value: (r) => Number(r.deal_value), cell: (r) => fmtUsd(Number(r.deal_value)) },

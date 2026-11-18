@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Building2, Calendar, FileSignature, Mail, MapPin, MessageSquare, Phone, Presentation, StickyNote, Users } from "lucide-react";
+import { Bot, Building2, Calendar, FileSignature, Mail, MapPin, MessageSquare, Phone, Presentation, Star, StickyNote, Users } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -23,6 +23,16 @@ export const Route = createFileRoute("/_authenticated/crm/$id")({
 
 const ICONS: Record<string, typeof Mail> = { Email: Mail, Call: Phone, Meeting: Users, Demo: Presentation, "Quote Sent": FileSignature, "Site Visit": MapPin, Note: StickyNote };
 const TYPES = Object.keys(ICONS);
+
+type AvatarContext = {
+  recommended_model?: string | undefined;
+  motor_hp?: number | null | undefined;
+  borewell_depth_m?: number | null | undefined;
+  head_m?: number | null | undefined;
+  feedback_score?: number | null | undefined;
+  whatsapp_handover_at?: string | null | undefined;
+  summary?: string | undefined;
+};
 
 function LeadDetail() {
   const { id } = Route.useParams();
@@ -69,6 +79,7 @@ function LeadDetail() {
   const ctry = country(l.country_code);
   const cmp = campaign(l.campaign_id);
   const stageIdx = LEAD_STAGES.indexOf(l.stage as (typeof LEAD_STAGES)[number]);
+  const av = (l.avatar_context ?? null) as AvatarContext | null;
 
   return (
     <>
@@ -168,6 +179,60 @@ function LeadDetail() {
           </ol>
         </ChartCard>
       </div>
+
+      {av && (
+        <ChartCard
+          title="Prakash AI Avatar consultation"
+          subtitle="Captured during the avatar pump-sizing chat"
+          className="mt-4"
+          actions={<StatusBadge value="Prakash AI Avatar" />}
+        >
+          <div className="grid gap-4 md:grid-cols-[1fr_1.2fr]">
+            <dl className="space-y-2.5 text-sm">
+              {[
+                [Bot, "Recommended model", av.recommended_model ?? "—"],
+                [FileSignature, "Motor horsepower", av.motor_hp != null ? `${av.motor_hp} HP` : "—"],
+                [MapPin, "Borewell depth", av.borewell_depth_m != null ? `${av.borewell_depth_m} m` : "—"],
+                [MapPin, "Head", av.head_m != null ? `${av.head_m} m` : "—"],
+                [
+                  Star,
+                  "Customer feedback",
+                  av.feedback_score != null ? (
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="inline-flex items-center gap-0.5">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <Star key={i} className={cn("size-3.5", i <= Math.round(av.feedback_score ?? 0) ? "fill-primary text-primary" : "text-muted-foreground/40")} />
+                        ))}
+                      </span>
+                      <span className="num">{av.feedback_score}/5</span>
+                    </span>
+                  ) : (
+                    "—"
+                  ),
+                ],
+                [MessageSquare, "WhatsApp handover", av.whatsapp_handover_at ? fmtDateTime(av.whatsapp_handover_at) : "No WhatsApp handover (web form)"],
+              ].map(([Icon, k, v]) => {
+                const I = Icon as typeof Mail;
+                return (
+                  <div key={k as string} className="flex items-start gap-3">
+                    <I className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                    <div className="min-w-0">
+                      <dt className="eyebrow">{k as string}</dt>
+                      <dd>{v as ReactNode}</dd>
+                    </div>
+                  </div>
+                );
+              })}
+            </dl>
+            <div className="rounded-lg border border-primary/25 bg-primary/8 p-3 text-sm">
+              <div className="eyebrow mb-1 flex items-center gap-1 text-primary">
+                <Bot className="size-3" /> Conversation summary
+              </div>
+              {av.summary ?? "—"}
+            </div>
+          </div>
+        </ChartCard>
+      )}
       <DemoNote />
     </>
   );

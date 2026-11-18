@@ -4,6 +4,7 @@ import { Bot, Check, Eye, Sparkles, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { AvatarAnalytics } from "@/components/app/avatar-analytics";
 import { ChartCard, DonutChart } from "@/components/app/charts";
 import { KpiCard } from "@/components/app/kpi-card";
 import { DemoNote, KpiGrid, PageHeader } from "@/components/app/page";
@@ -30,6 +31,7 @@ function AiPage() {
   const me = useCurrentUser();
   const insights = useInsights();
   const { country, campaign } = useLookups();
+  const [tab, setTab] = useState("insights");
   const [status, setStatus] = useState("open");
   const [module, setModule] = useState<string | null>(null);
   const canEdit = can(me.data?.roles ?? [], "insights.edit");
@@ -68,6 +70,17 @@ function AiPage() {
         filters={["country"]}
       />
 
+      <Tabs value={tab} onValueChange={setTab} className="mb-4">
+        <TabsList>
+          <TabsTrigger value="insights">Insights & recommendations</TabsTrigger>
+          <TabsTrigger value="avatar">Prakash AI Avatar analytics</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      {tab === "avatar" ? (
+        <AvatarAnalytics />
+      ) : (
+        <>
       <KpiGrid cols={5}>
         <KpiCard label="Open insights" value={String(all.filter((i) => ["New", "In Review"].includes(i.status)).length)} />
         <KpiCard label="Critical" value={String(all.filter((i) => i.severity === "Critical" && i.status !== "Dismissed").length)} />
@@ -139,6 +152,8 @@ function AiPage() {
           </div>
         </div>
       </div>
+        </>
+      )}
       <DemoNote />
     </>
   );

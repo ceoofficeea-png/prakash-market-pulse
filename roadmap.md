@@ -28,3 +28,6 @@
 - [x] Social multi-account selector, Snapchat/X channel metrics
 - [x] Demo WhatsApp analytics card and tab
 - [x] Verify period rules and signed-in dashboard interactions
+- [x] Prakash AI Avatar analytics tab on /ai (KPIs, model breakdown, sentiment tags, conversion funnel)
+- [x] CRM: "Prakash AI Avatar" lead source filter/badge + avatar consultation panel on lead detail
+- [x] Overview: AI Avatar summary strip linking to avatar analytics
