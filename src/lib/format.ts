@@ -68,7 +68,8 @@ export function downloadCsv(filename: string, rows: Record<string, unknown>[]) {
   if (!first) return;
   const headers = Object.keys(first);
   const esc = (v: unknown) => {
-    const s = v == null ? "" : Array.isArray(v) ? v.join("; ") : String(v);
+    let s = v == null ? "" : Array.isArray(v) ? v.join("; ") : String(v);
+    if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   const csv = [headers.join(","), ...rows.map((r) => headers.map((h) => esc(r[h])).join(","))].join("\n");
