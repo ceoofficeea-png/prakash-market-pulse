@@ -7,7 +7,9 @@ import { KpiGrid } from "@/components/app/page";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFilters } from "@/lib/filters";
 import { fmtCompact, fmtDuration, fmtPct, pctChange, safeDiv, socialLabel } from "@/lib/format";
-import { DEMO_ACCOUNTS, socialDemoComparison } from "@/lib/social-demo";
+import { DataTable } from "@/components/app/data-table";
+import { Button } from "@/components/ui/button";
+import { DEMO_ACCOUNTS, accountBreakdown, socialDemoComparison } from "@/lib/social-demo";
 
 export function SocialAnalytics() {
   const f = useFilters();
@@ -19,15 +21,33 @@ export function SocialAnalytics() {
     ["instagram", ["likes", "comments", "saves", "storyViews"]],
     ["snapchat", ["storyViews", "spotlightViews", "replies"]],
     ["x", ["likes", "replies", "reposts"]],
+    ["youtube", ["likes", "comments", "shares"]],
   ] as const;
+  const [platform, setPlatform] = useState<string | null>(null);
+  const breakdown = accountBreakdown(f.from, f.to, platform, f.countries);
+  const pickPlatform = (id: string | null) => { setPlatform(id); setChannels(id ? [id] : []); setAccounts([]); };
   const names = { likes: "Likes", comments: "Comments", shares: "Shares", saves: "Saves", storyViews: "Story views", spotlightViews: "Spotlight views", replies: "Replies", reposts: "Reposts" };
   return <section className="mb-6 border-b border-border pb-6">
     <div className="mb-3 flex flex-wrap items-center justify-between gap-3"><h2 className="text-sm font-semibold">Multi-account analytics <span className="ml-2 text-xs font-normal text-warning">Demo</span></h2><div className="flex flex-wrap gap-2">
-      <MultiSelect label="Accounts" allLabel="All Accounts" options={DEMO_ACCOUNTS.map((a) => ({ value: a.id, label: a.name, group: socialLabel(a.platform) }))} value={accounts} onChange={setAccounts} icon={<Layers className="size-3.5" />} width="w-80" />
+      <MultiSelect label="Accounts" allLabel="All Accounts" options={DEMO_ACCOUNTS.filter((a) => !platform || a.platform === platform).map((a) => ({ value: a.id, label: `${a.handle}${a.handle === a.name ? "" : ` · ${a.name}`}`, group: socialLabel(a.platform) }))} value={accounts} onChange={setAccounts} icon={<Layers className="size-3.5" />} width="w-80" />
       <MultiSelect label="Channels" options={metrics.map(([id]) => ({ value: id, label: socialLabel(id) }))} value={channels} onChange={setChannels} />
     </div></div>
     <Tabs defaultValue="accounts"><TabsList className="mb-3"><TabsTrigger value="accounts">Social accounts</TabsTrigger><TabsTrigger value="whatsapp"><MessageCircle className="mr-1 size-3.5" /> WhatsApp Business</TabsTrigger></TabsList>
       <TabsContent value="accounts">
+        <div className="mb-3 flex flex-wrap gap-1.5" role="group" aria-label="Platform">{[null, ...metrics.map(([id]) => id)].map((id) => <Button key={id ?? "all"} size="sm" variant={platform === id ? "default" : "outline"} onClick={() => pickPlatform(id)}>{id ? `${socialLabel(id)} (${DEMO_ACCOUNTS.filter((a) => a.platform === id).length})` : "All platforms"}</Button>)}</div>
+        <ChartCard title={`${platform ? socialLabel(platform) : "All platforms"} · account-by-account`} subtitle={accounts.length ? "Click an account to toggle it · KPIs and chart below show the selected accounts" : "Each account shown separately · click a row to focus on it"}>
+          <DataTable rows={breakdown} rowKey={(r) => r.id} exportName={`social-accounts-${platform ?? "all"}`} pageSize={12} dense initialSort={{ key: "followers", dir: "desc" }} onRowClick={(r) => setAccounts((cur) => cur.length === 1 && cur[0] === r.id ? [] : [r.id])} columns={[
+            { key: "handle", header: "Account", cell: (r) => <div className={accounts.includes(r.id) ? "text-primary" : ""}><div className="font-medium">{r.handle}</div><div className="text-xs text-muted-foreground">{socialLabel(r.platform)} · {r.name}</div></div> },
+            { key: "country", header: "Market" },
+            { key: "followers", header: "Followers", align: "right", cell: (r) => fmtCompact(r.followers) },
+            { key: "growth", header: "Growth", align: "right", cell: (r) => `+${fmtPct(r.growth, 1)}` },
+            { key: "impressions", header: "Impressions", align: "right", cell: (r) => fmtCompact(r.impressions) },
+            { key: "engagements", header: "Engagements", align: "right", cell: (r) => fmtCompact(r.engagements) },
+            { key: "rate", header: "Eng. rate", align: "right", cell: (r) => fmtPct(r.rate, 2) },
+            { key: "leads", header: "Leads", align: "right" },
+          ]} />
+        </ChartCard>
+        <div className="mt-4" />
         <KpiGrid cols={4}><KpiCard label="Followers" value={fmtCompact(c.followers)} delta={pctChange(c.followers, p.followers)} /><KpiCard label="Impressions" value={fmtCompact(c.impressions)} delta={pctChange(c.impressions, p.impressions)} /><KpiCard label="Engagements" value={fmtCompact(c.engagements)} delta={pctChange(c.engagements, p.engagements)} /><KpiCard label="Engagement rate" value={fmtPct(safeDiv(c.engagements, c.impressions), 2)} delta={pctChange(safeDiv(c.engagements, c.impressions), safeDiv(p.engagements, p.impressions))} /></KpiGrid>
         <ChartCard title="Account reach & engagement" subtitle="Daily · selected pages"><TrendChart data={c.rows} previousData={p.rows} series={[{ key: "impressions", label: "Impressions" }, { key: "engagements", label: "Engagements", axis: "right", color: "var(--chart-2)" }]} /></ChartCard>
         <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">{metrics.filter(([id]) => !channels.length || channels.includes(id)).map(([id, keys]) => {
