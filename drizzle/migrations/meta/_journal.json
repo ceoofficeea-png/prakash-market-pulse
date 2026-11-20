@@ -50,6 +50,13 @@
       "when": 1795150362045,
       "tag": "0006_restrict_reads_to_role_holders",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795151898277,
+      "tag": "0007_signup_viewer_only_and_countries_roles",
+      "breakpoints": true
     }
   ]
 }
