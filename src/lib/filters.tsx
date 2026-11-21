@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { toISODate } from "@/lib/format";
-import { COMPARISON_PERIODS, previousRange, trailingRange, type ComparisonPeriod } from "@/lib/periods";
+import { COMPARISON_PERIODS, periodRanges, previousRange, rangeLabel, type ComparisonPeriod } from "@/lib/periods";
 
 export type DatePreset = "7d" | "30d" | "90d" | "180d" | "custom";
 
@@ -13,6 +13,9 @@ export interface Filters {
   platforms: string[];
   campaigns: number[];
   comparison?: ComparisonPeriod | undefined;
+  /** Explicit comparison window (period buttons or custom "Compare with") */
+  compareFrom?: string | undefined;
+  compareTo?: string | undefined;
 }
 
 interface FiltersContextValue extends Filters {
@@ -20,6 +23,10 @@ interface FiltersContextValue extends Filters {
   prevFrom: string;
   prevTo: string;
   days: number;
+  /** e.g. "Oct 2026" — name of the comparison window */
+  prevLabel: string;
+  currentLabel: string;
+  setCompareRange: (from: string | undefined, to?: string | undefined) => void;
   setPreset: (p: Exclude<DatePreset, "custom">) => void;
   setRange: (from: string, to: string) => void;
   setCountries: (c: string[]) => void;
@@ -57,8 +64,8 @@ export function FiltersProvider({ children }: { children: ReactNode }) {
       if (!raw) return;
       const saved = JSON.parse(raw) as Filters;
       const period = COMPARISON_PERIODS.find((p) => p.id === saved.comparison);
-      const range = period ? trailingRange(period.days) : saved.preset !== "custom" ? rangeFor(PRESET_DAYS[saved.preset]) : { from: saved.from, to: saved.to };
-      setState({ ...defaults(), ...saved, ...range });
+      const range = period ? periodRanges(period.id) : saved.preset !== "custom" ? rangeFor(PRESET_DAYS[saved.preset]) : { from: saved.from, to: saved.to };
+      setState({ ...defaults(), ...saved, ...range, ...(period ? { compareFrom: (range as ReturnType<typeof periodRanges>).prevFrom, compareTo: (range as ReturnType<typeof periodRanges>).prevTo } : {}) });
     } catch {
       /* ignore */
     } finally {
@@ -72,17 +79,24 @@ export function FiltersProvider({ children }: { children: ReactNode }) {
   }, [state, ready]);
 
   const value = useMemo<FiltersContextValue>(() => {
-    const { days, prevFrom, prevTo } = previousRange(state.from, state.to);
+    const auto = previousRange(state.from, state.to);
+    const prevFrom = state.compareFrom && state.compareTo ? state.compareFrom : auto.prevFrom;
+    const prevTo = state.compareFrom && state.compareTo ? state.compareTo : auto.prevTo;
     return {
       ...state,
-      days,
+      days: auto.days,
       prevFrom,
       prevTo,
-      setPreset: (p) => setState((s) => ({ ...s, comparison: undefined, preset: p, ...rangeFor(PRESET_DAYS[p]) })),
-      setRange: (from, to) => setState((s) => ({ ...s, comparison: undefined, preset: "custom", from, to })),
+      prevLabel: rangeLabel(prevFrom, prevTo),
+      currentLabel: rangeLabel(state.from, state.to),
+      setCompareRange: (compareFrom, compareTo) => setState((s) => ({ ...s, compareFrom, compareTo: compareFrom ? compareTo : undefined })),
+      setPreset: (p) => setState((s) => ({ ...s, comparison: undefined, compareFrom: undefined, compareTo: undefined, preset: p, ...rangeFor(PRESET_DAYS[p]) })),
+      setRange: (from, to) => setState((s) => ({ ...s, comparison: undefined, compareFrom: s.comparison ? undefined : s.compareFrom, compareTo: s.comparison ? undefined : s.compareTo, preset: "custom", from, to })),
       setComparison: (comparison) => {
         const period = COMPARISON_PERIODS.find((p) => p.id === comparison);
-        if (period) setState((s) => ({ ...s, comparison, preset: "custom", ...trailingRange(period.days) }));
+        if (!period) return;
+        const r = periodRanges(period.id);
+        setState((s) => ({ ...s, comparison, preset: "custom", from: r.from, to: r.to, compareFrom: r.prevFrom, compareTo: r.prevTo }));
       },
       setCountries: (countries) => setState((s) => ({ ...s, countries })),
       setPlatforms: (platforms) => setState((s) => ({ ...s, platforms })),
@@ -105,4 +119,10 @@ export function inRange(value: string | null | undefined, from: string, to: stri
   if (!value) return false;
   const d = value.slice(0, 10);
   return d >= from && d <= to;
+}
+
+/** Safe outside the provider (falls back to a generic label). */
+export function useComparisonLabel() {
+  const ctx = useContext(FiltersContext);
+  return ctx ? `vs. ${ctx.prevLabel}` : "vs. previous period";
 }

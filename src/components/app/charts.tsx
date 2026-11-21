@@ -1,3 +1,4 @@
+import { useComparisonLabel } from "@/lib/filters";
 import type { ReactNode } from "react";
 import {
   Area,
@@ -79,10 +80,11 @@ export interface Series {
 const isDateKey = (v: unknown) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v);
 
 function TrendComparison({ data, previousData, series }: { data: Record<string, unknown>[]; previousData?: Record<string, unknown>[] | undefined; series: Series[] }) {
+  const vs = useComparisonLabel();
   return <div className="mb-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">{series.map((s) => {
     const total = (rows: Record<string, unknown>[]) => rows.reduce((n, r) => n + Number(r[s.key] ?? 0), 0);
     const delta = previousData?.length ? pctChange(total(data), total(previousData)) : null;
-    return <span key={s.key}>{s.label}: <span className={delta == null || delta === 0 ? "text-muted-foreground" : delta > 0 ? "text-success" : "text-destructive"}>{delta == null ? "—" : `${delta > 0 ? "+" : ""}${fmtPct(delta)}`}</span> vs. previous period</span>;
+    return <span key={s.key}>{s.label}: <span className={delta == null || delta === 0 ? "text-muted-foreground" : delta > 0 ? "text-success" : "text-destructive"}>{delta == null ? "—" : `${delta > 0 ? "+" : ""}${fmtPct(delta)}`}</span> {vs}</span>;
   })}</div>;
 }
 

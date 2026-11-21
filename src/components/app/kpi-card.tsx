@@ -1,6 +1,7 @@
 import { ArrowDownRight, ArrowUpRight, type LucideIcon } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 
+import { useComparisonLabel } from "@/lib/filters";
 import { fmtPct } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,7 @@ interface KpiCardProps {
 }
 
 export function KpiCard({ label, value, delta, invert, hint, icon: Icon, spark, color = "var(--chart-1)", onClick }: KpiCardProps) {
+  const vs = useComparisonLabel();
   const good = delta == null ? null : invert ? delta < 0 : delta > 0;
   const data = spark?.map((v, i) => ({ i, v }));
   return (
@@ -39,10 +41,10 @@ export function KpiCard({ label, value, delta, invert, hint, icon: Icon, spark, 
             {delta != null && Number.isFinite(delta) && (
               <span className={cn("inline-flex flex-wrap items-center gap-0.5 num font-medium", delta === 0 ? "text-muted-foreground" : good ? "text-success" : "text-destructive")}>
                 {delta >= 0 ? <ArrowUpRight className="size-3.5" /> : <ArrowDownRight className="size-3.5" />}
-                {fmtPct(Math.abs(delta))} <span className="font-normal text-muted-foreground">vs. previous period</span>
+                {fmtPct(Math.abs(delta))} <span className="font-normal text-muted-foreground">{vs}</span>
               </span>
             )}
-            {(delta == null || !Number.isFinite(delta)) && <span className="text-muted-foreground" title="No comparable previous-period value is available">vs. previous period: —</span>}
+            {(delta == null || !Number.isFinite(delta)) && <span className="text-muted-foreground" title="No comparable previous-period value is available">{vs}: —</span>}
             {hint && <span className="text-muted-foreground">{hint}</span>}
           </div>
         </div>
