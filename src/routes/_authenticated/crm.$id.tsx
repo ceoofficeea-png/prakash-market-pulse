@@ -5,7 +5,7 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { ChartCard } from "@/components/app/charts";
-import { DemoNote, DetailStat, LoadingBlock, PageHeader } from "@/components/app/page";
+import { DemoNote, DetailStat, LoadingBlock, NoAccess, PageHeader } from "@/components/app/page";
 import { StatusBadge } from "@/components/app/status-badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser, useLead, useLeadActivities, useLookups } from "@/lib/api";
 import { fmtDate, fmtDateTime, fmtUsd, LEAD_STAGES } from "@/lib/format";
-import { can } from "@/lib/permissions";
+import { can, canReadLeads } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/crm/$id")({
@@ -45,6 +45,7 @@ function LeadDetail() {
   const [note, setNote] = useState("");
   const [type, setType] = useState("Call");
   const canEdit = can(me.data?.roles ?? [], "leads.edit");
+  const canRead = canReadLeads(me.data?.roles ?? []);
 
   const update = useMutation({
     mutationFn: async (patch: { stage?: string; owner_id?: number }) => {
@@ -73,6 +74,8 @@ function LeadDetail() {
     qc.invalidateQueries({ queryKey: ["leads"] });
   };
 
+  if (me.isLoading) return <LoadingBlock />;
+  if (!canRead) return <NoAccess what="lead records" />;
   if (lead.isLoading) return <LoadingBlock />;
   const l = lead.data;
   if (!l) return <div className="panel p-8 text-center text-muted-foreground">Lead not found.</div>;

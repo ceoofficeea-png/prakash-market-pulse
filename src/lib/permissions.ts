@@ -12,6 +12,7 @@ export type Permission =
   | "tasks.edit"
   | "reports.edit"
   | "social.edit"
+  | "leads.read"
   | "leads.edit"
   | "content.edit"
   | "insights.edit"
@@ -24,6 +25,7 @@ const MATRIX: Record<Permission, AppRole[]> = {
   "tasks.edit": ["admin", "manager"],
   "reports.edit": ["admin", "manager"],
   "social.edit": ["admin", "manager"],
+  "leads.read": ["admin", "manager", "analyst"],
   "leads.edit": ["admin", "manager", "analyst"],
   "content.edit": ["admin", "manager", "analyst"],
   "insights.edit": ["admin", "manager", "analyst"],
@@ -44,3 +46,6 @@ export function can(roles: AppRole[], permission: Permission): boolean {
 }
 
 export const roleLabel = (r: AppRole) => ROLES.find((x) => x.id === r)?.label ?? r;
+
+/** Viewers have no row-level read access to leads; mirrors the RLS policy on leads/lead_activities. */
+export const canReadLeads = (roles: AppRole[]) => can(roles, "leads.read");

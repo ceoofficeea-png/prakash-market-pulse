@@ -4,14 +4,14 @@ import { toast } from "sonner";
 
 import { BarList, ChartCard, DonutChart, TrendChart } from "@/components/app/charts";
 import { DataTable } from "@/components/app/data-table";
-import { DemoNote, DetailStat, LoadingBlock, PageHeader } from "@/components/app/page";
+import { DemoNote, DetailStat, LeadRestricted, LoadingBlock, PageHeader } from "@/components/app/page";
 import { StatusBadge } from "@/components/app/status-badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { totals, useContent, useCurrentUser, useLeads, useLookups, useMetrics, useSocialPosts, useTasks } from "@/lib/api";
 import { CAMPAIGN_STATUSES, fmtCompact, fmtDate, fmtNum, fmtPct, fmtUsd, platformColor, platformLabel, safeDiv, toISODate } from "@/lib/format";
-import { can } from "@/lib/permissions";
+import { can, canReadLeads } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/campaigns/$id")({
   head: () => ({ meta: [{"title": "Campaign detail \u2014 Prakash Pump"}, {"name": "description", "content": "Campaign detail analytics and records for the Prakash Pump marketing team."}, {"property": "og:title", "content": "Campaign detail \u2014 Prakash Pump"}, {"property": "og:description", "content": "Campaign detail analytics and records for the Prakash Pump marketing team."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary_large_image"}] }),
@@ -61,6 +61,7 @@ function CampaignDetail() {
   const pacing = safeDiv(t.spend, Number(c.budget));
   const campaignLeads = (leads.data ?? []).filter((l) => l.campaign_id === cid);
   const canEdit = can(me.data?.roles ?? [], "campaigns.edit");
+  const canRead = canReadLeads(me.data?.roles ?? []);
 
   return (
     <>
@@ -146,6 +147,8 @@ function CampaignDetail() {
         </ChartCard>
       </div>
 
+      {canRead ? (
+        <>
       <h2 className="mb-2 mt-6 text-sm font-semibold">CRM leads from this campaign</h2>
       <DataTable
         rows={campaignLeads}
@@ -163,6 +166,10 @@ function CampaignDetail() {
           { key: "deal_value", header: "Value", align: "right", value: (r) => Number(r.deal_value), cell: (r) => fmtUsd(Number(r.deal_value)) },
         ]}
       />
+        </>
+      ) : (
+        <LeadRestricted className="mt-6" />
+      )}
       <DemoNote />
     </>
   );

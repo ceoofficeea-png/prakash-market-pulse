@@ -2,9 +2,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 
 import { BarList, ChartCard, DonutChart, TrendChart } from "@/components/app/charts";
 import { DataTable } from "@/components/app/data-table";
-import { DemoNote, DetailStat, LoadingBlock, PageHeader } from "@/components/app/page";
+import { DemoNote, DetailStat, LeadRestricted, LoadingBlock, PageHeader } from "@/components/app/page";
 import { StatusBadge } from "@/components/app/status-badge";
-import { totals, useCompetitorActivities, useCompetitors, useKeywords, useLeads, useLookups, useMetrics, useWeb } from "@/lib/api";
+import { totals, useCompetitorActivities, useCompetitors, useKeywords, useLeadAccess, useLeads, useLookups, useMetrics, useWeb } from "@/lib/api";
 import { inRange, useFilters } from "@/lib/filters";
 import { fmtCompact, fmtDate, fmtNum, fmtUsd, grainFor, platformColor, platformLabel, safeDiv } from "@/lib/format";
 
@@ -31,6 +31,7 @@ function MarketDetail() {
   const kws = useKeywords();
   const comps = useCompetitors();
   const acts = useCompetitorActivities();
+  const access = useLeadAccess();
 
   if (loading) return <LoadingBlock />;
   if (!c) return <div className="panel p-8 text-center text-muted-foreground">Market not found.</div>;
@@ -66,7 +67,7 @@ function MarketDetail() {
         <DetailStat label="Spend" value={fmtUsd(t.spend, true)} />
         <DetailStat label="Paid leads" value={fmtNum(t.leads)} sub={`${fmtUsd(safeDiv(t.spend, t.leads))} CPL`} />
         <DetailStat label="Web sessions" value={fmtCompact(sessions)} />
-        <DetailStat label="CRM pipeline" value={fmtUsd(mLeads.filter((l) => !["Won", "Lost"].includes(l.stage)).reduce((a, l) => a + Number(l.deal_value), 0), true)} sub={`${mLeads.length} leads`} />
+        <DetailStat label="CRM pipeline" value={access.canReadLeads ? fmtUsd(mLeads.filter((l) => !["Won", "Lost"].includes(l.stage)).reduce((a, l) => a + Number(l.deal_value), 0), true) : "—"} sub={access.canReadLeads ? `${mLeads.length} leads` : "hidden for your role"} />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
@@ -105,7 +106,8 @@ function MarketDetail() {
       </div>
 
       <div className="mt-4 grid gap-4 xl:grid-cols-2">
-        <DataTable
+        {!access.canReadLeads && <LeadRestricted />}
+        {access.canReadLeads && <DataTable
           rows={mLeads}
           rowKey={(r) => r.id}
           onRowClick={(r) => navigate({ to: "/crm/$id", params: { id: String(r.id) } })}
@@ -119,7 +121,7 @@ function MarketDetail() {
             { key: "owner", header: "Owner", value: (r) => member(r.owner_id)?.name, cell: (r) => <span className="text-xs">{member(r.owner_id)?.name}</span> },
             { key: "deal_value", header: "Value", align: "right", value: (r) => Number(r.deal_value), cell: (r) => fmtUsd(Number(r.deal_value), true) },
           ]}
-        />
+        />}
         <DataTable
           rows={(kws.data ?? []).filter((k) => k.country_code === code)}
           rowKey={(r) => r.id}

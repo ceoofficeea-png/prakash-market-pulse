@@ -7,6 +7,7 @@ import { AddUserDialog } from "@/components/app/add-user-dialog";
 import { DataTable } from "@/components/app/data-table";
 import { KpiCard } from "@/components/app/kpi-card";
 import { KpiGrid, NoAccess, PageHeader } from "@/components/app/page";
+import { ChangeMyPasswordCard, ResetPasswordDialog } from "@/components/app/password-actions";
 import { StatusBadge } from "@/components/app/status-badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -55,19 +56,29 @@ function AdminPage() {
     queryKey: ["admin-users"],
     enabled: isAdmin,
     queryFn: async () => {
-      const [p, r] = await Promise.all([supabase.from("profiles").select("*").order("created_at"), supabase.from("user_roles").select("user_id, role")]);
-      if (p.error) throw p.error;
-      if (r.error) throw r.error;
-      return (p.data ?? []).map((u) => ({ ...u, role: primaryRole((r.data ?? []).filter((x) => x.user_id === u.id).map((x) => x.role as AppRole)) }));
+      const [profiles, roles] = await Promise.all([
+        supabase.from("profiles").select("id, full_name, email, created_at").order("created_at"),
+        supabase.from("user_roles").select("user_id, role"),
+      ]);
+      if (profiles.error) throw profiles.error;
+      if (roles.error) throw roles.error;
+      // Group roles once (O(n + m)) instead of filtering the full role list for every profile.
+      const byUser = new Map<string, AppRole[]>();
+      for (const row of roles.data ?? []) {
+        const list = byUser.get(row.user_id);
+        if (list) list.push(row.role as AppRole);
+        else byUser.set(row.user_id, [row.role as AppRole]);
+      }
+      return (profiles.data ?? []).map((u) => ({ ...u, role: primaryRole(byUser.get(u.id) ?? []) }));
     },
   });
 
   const setRole = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: AppRole }) => {
-      const del = await supabase.from("user_roles").delete().eq("user_id", userId);
-      if (del.error) throw del.error;
-      const ins = await supabase.from("user_roles").insert({ user_id: userId, role });
-      if (ins.error) throw ins.error;
+      // Role writes go through a SECURITY DEFINER RPC: authenticated no longer
+      // holds insert/update/delete on public.user_roles (migration 0010).
+      const { error } = await supabase.rpc("admin_set_user_role", { _user_id: userId, _role: role });
+      if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Role updated");
@@ -101,6 +112,7 @@ function AdminPage() {
         </TabsList>
 
         <TabsContent value="users" className="space-y-4">
+          <ChangeMyPasswordCard />
           <DataTable
             rows={users.data ?? []}
             rowKey={(r) => r.id}
@@ -118,6 +130,14 @@ function AdminPage() {
                     <SelectTrigger className="h-8 w-48"><SelectValue /></SelectTrigger>
                     <SelectContent>{ROLES.map((x) => <SelectItem key={x.id} value={x.id}>{x.label}</SelectItem>)}</SelectContent>
                   </Select>
+                ),
+              },
+              {
+                key: "actions",
+                header: "Password",
+                sortable: false,
+                cell: (r) => (
+                  <ResetPasswordDialog userId={r.id} name={r.full_name || r.email || "this user"} />
                 ),
               },
             ]}

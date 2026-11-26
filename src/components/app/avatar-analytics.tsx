@@ -32,7 +32,7 @@ export function AvatarAnalytics() {
   return (
     <div className="space-y-4">
       <KpiGrid cols={4}>
-        <KpiCard label="Customer consultations" value={fmtNum(k.consultations)} delta={k.consultationsDelta} icon={Users} hint="vs prev." />
+        <KpiCard label="Customer consultations" value={fmtNum(k.consultations)} delta={k.consultationsDelta} icon={Users} />
         <KpiCard label="Recommendation accuracy" value={fmtPct(k.recommendationAccuracy)} delta={k.accuracyDelta} icon={ThumbsUp} hint="correct pump & motor sizing" />
         <KpiCard label="Avg feedback" value={`${k.avgFeedback.toFixed(1)} / 5`} delta={k.feedbackDelta} icon={Star} hint={`CSAT ${fmtPct(k.csat)}`} />
         <KpiCard label="Leads handed to sales" value={fmtNum(k.leadsHandedToSales)} delta={k.leadsDelta} icon={UserCheck} hint="WhatsApp + form" />

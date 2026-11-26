@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser, useKpis, useLeads, useLookups, useTasks } from "@/lib/api";
 import { fmtDate, fmtNum, fmtPct, fmtUsd, initials, TASK_STATUSES } from "@/lib/format";
-import { can } from "@/lib/permissions";
+import { can, canReadLeads } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/team/$id")({
   head: () => ({ meta: [{"title": "Team member \u2014 Prakash Pump"}, {"name": "description", "content": "Team member analytics and records for the Prakash Pump marketing team."}, {"property": "og:title", "content": "Team member \u2014 Prakash Pump"}, {"property": "og:description", "content": "Team member analytics and records for the Prakash Pump marketing team."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary_large_image"}] }),
@@ -32,6 +32,7 @@ function MemberDetail() {
   const leads = useLeads();
   const m = member(mid);
   const canEdit = can(me.data?.roles ?? [], "tasks.edit");
+  const canRead = canReadLeads(me.data?.roles ?? []);
 
   const setStatus = useMutation({
     mutationFn: async ({ taskId, status }: { taskId: number; status: string }) => {
@@ -78,7 +79,7 @@ function MemberDetail() {
         <DetailStat label="KPI achievement" value={`${Number(last?.kpi_achieved ?? 0).toFixed(0)}%`} />
         <DetailStat label="On-time rate" value={fmtPct(Number(last?.on_time_rate ?? 0), 0)} />
         <DetailStat label="Tasks done" value={fmtNum(ts.filter((t) => t.status === "Done").length)} sub={`${ts.filter((t) => t.status !== "Done").length} open`} />
-        <DetailStat label="Leads owned" value={fmtNum(owned.length)} sub={fmtUsd(owned.reduce((a, l) => a + Number(l.deal_value), 0), true)} />
+        <DetailStat label="Leads owned" value={canRead ? fmtNum(owned.length) : "—"} sub={canRead ? fmtUsd(owned.reduce((a, l) => a + Number(l.deal_value), 0), true) : "hidden for your role"} />
         <DetailStat label="Campaigns owned" value={fmtNum(myCampaigns.length)} />
       </div>
 

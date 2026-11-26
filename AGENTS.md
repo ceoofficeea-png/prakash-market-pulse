@@ -17,4 +17,4 @@
 - Shared UI building blocks (KpiCard, ChartCard/charts, DataTable with CSV export, StatusBadge, FilterBar) live in `src/components/app/`; colours come only from tokens in `src/styles.css`.
 - tsconfig uses exactOptionalPropertyTypes + noUncheckedIndexedAccess: declare optional props as `prop?: T | undefined`.
 - Period comparisons use inclusive rolling windows and an immediately preceding equal-length window from `src/lib/periods.ts`, so every module compares consistent ranges.
-- Expanded social page and messaging analytics use isolated deterministic demo fixtures in `src/lib/social-demo.ts`; they do not claim connected provider data or change existing shared records.
+- The social module is organic-only (no messaging channels) and reads isolated deterministic fixtures from `src/lib/social-platforms.ts` for accounts, daily metrics and posts; they do not claim connected provider data or change existing shared records.

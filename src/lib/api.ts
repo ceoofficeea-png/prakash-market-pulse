@@ -3,7 +3,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { useFilters } from "@/lib/filters";
-import { primaryRole, type AppRole } from "@/lib/permissions";
+import { canReadLeads, primaryRole, type AppRole } from "@/lib/permissions";
 
 type Tables = Database["public"]["Tables"];
 export type Row<T extends keyof Tables> = Tables[T]["Row"];
@@ -166,23 +166,45 @@ export function totals(rows: MetricsRow[] | undefined) {
   return t;
 }
 
+/* ---------- Lead access ---------- */
+/**
+ * Viewers have no read access to leads/lead_activities (RLS, migration 0010),
+ * so lead queries stay disabled for them and pages render a no-access state.
+ */
+export function useLeadAccess() {
+  const me = useCurrentUser();
+  return { canReadLeads: canReadLeads(me.data?.roles ?? []), loading: me.isLoading };
+}
+
 /* ---------- Tables ---------- */
-export const useLeads = () =>
-  useQuery({ queryKey: ["leads"], queryFn: async () => unwrap(await supabase.from("leads").select("*").order("created_at", { ascending: false })) });
-export const useLead = (id: number) =>
-  useQuery({
+export const useLeads = () => {
+  const { canReadLeads } = useLeadAccess();
+  return useQuery({
+    queryKey: ["leads"],
+    enabled: canReadLeads,
+    queryFn: async () => unwrap(await supabase.from("leads").select("*").order("created_at", { ascending: false })),
+  });
+};
+export const useLead = (id: number) => {
+  const { canReadLeads } = useLeadAccess();
+  return useQuery({
     queryKey: ["leads", id],
+    enabled: canReadLeads,
     queryFn: async (): Promise<Lead | null> => {
       const { data, error } = await supabase.from("leads").select("*").eq("id", id).maybeSingle();
       if (error) throw new Error(error.message);
       return data;
     },
   });
-export const useLeadActivities = (leadId: number) =>
-  useQuery({
+};
+export const useLeadActivities = (leadId: number) => {
+  const { canReadLeads } = useLeadAccess();
+  return useQuery({
     queryKey: ["lead_activities", leadId],
+    enabled: canReadLeads,
     queryFn: async () => unwrap(await supabase.from("lead_activities").select("*").eq("lead_id", leadId).order("occurred_at", { ascending: false })),
   });
+};
 
 export const useContent = () =>
   useQuery({ queryKey: ["content_items"], queryFn: async () => unwrap(await supabase.from("content_items").select("*").order("created_at", { ascending: false })) });

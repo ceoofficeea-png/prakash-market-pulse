@@ -73,6 +73,18 @@ export function NoAccess({ what = "this area" }: { what?: string }) {
   );
 }
 
+/** Inline stand-in for lead-data blocks a viewer is not allowed to read. */
+export function LeadRestricted({ className }: { className?: string | undefined }) {
+  return (
+    <div className={cn("flex items-start gap-2 rounded-lg border border-border bg-surface-2/40 p-3 text-xs text-muted-foreground", className)}>
+      <Lock className="mt-0.5 size-3.5 shrink-0 text-primary" />
+      <span>
+        <span className="font-medium text-foreground">CRM leads are hidden for your role.</span> Ask an administrator for Analyst access.
+      </span>
+    </div>
+  );
+}
+
 export function DetailStat({ label, value, sub }: { label: string; value: ReactNode; sub?: ReactNode }) {
   return (
     <div className="rounded-lg border border-border bg-surface-2/50 p-3">

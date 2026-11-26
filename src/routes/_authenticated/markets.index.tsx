@@ -4,10 +4,10 @@ import { useMemo, useState } from "react";
 import { BarsChart, ChartCard } from "@/components/app/charts";
 import { DataTable } from "@/components/app/data-table";
 import { KpiCard } from "@/components/app/kpi-card";
-import { DemoNote, KpiGrid, PageHeader } from "@/components/app/page";
+import { DemoNote, KpiGrid, LeadRestricted, PageHeader } from "@/components/app/page";
 import { StatusBadge } from "@/components/app/status-badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useCountries, useLeads, useMetrics, useWeb } from "@/lib/api";
+import { useCountries, useLeadAccess, useLeads, useMetrics, useWeb } from "@/lib/api";
 import { inRange, useFilters } from "@/lib/filters";
 import { fmtCompact, fmtNum, fmtPct, fmtUsd, safeDiv } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -26,6 +26,7 @@ function MarketsPage() {
   const metrics = useMetrics("country", { countries: [] });
   const web = useWeb("country", { countries: [] });
   const leads = useLeads();
+  const access = useLeadAccess();
   const [lens, setLens] = useState<Lens>("leads");
 
   const rows = useMemo(() => {
@@ -67,12 +68,14 @@ function MarketsPage() {
         filters={["date", "country"]}
       />
 
+      {!access.canReadLeads && <LeadRestricted className="mb-4" />}
+
       <KpiGrid cols={5}>
         <KpiCard label="Markets" value={String(rows.length)} hint={`${regions.length} regions`} />
         <KpiCard label="Addressable market" value={`$${fmtCompact(tam * 1e6)}`} />
         <KpiCard label="Weighted share" value={`${weightedShare.toFixed(1)}%`} />
         <KpiCard label="Distributors" value={fmtNum(rows.reduce((a, r) => a + r.distributors, 0))} />
-        <KpiCard label="Open pipeline" value={fmtUsd(rows.reduce((a, r) => a + r.pipeline, 0), true)} />
+        <KpiCard label="Open pipeline" value={access.canReadLeads ? fmtUsd(rows.reduce((a, r) => a + r.pipeline, 0), true) : "—"} />
       </KpiGrid>
 
       <ChartCard
@@ -181,8 +184,8 @@ function MarketsPage() {
             { key: "leads", header: "Paid leads", align: "right", cell: (r) => fmtNum(r.leads) },
             { key: "cpl", header: "CPL", align: "right", value: (r) => safeDiv(r.spend, r.leads), cell: (r) => fmtUsd(safeDiv(r.spend, r.leads)) },
             { key: "sessions", header: "Sessions", align: "right", cell: (r) => fmtCompact(r.sessions) },
-            { key: "pipeline", header: "Pipeline", align: "right", cell: (r) => fmtUsd(r.pipeline, true) },
-            { key: "conv", header: "Lead rate", align: "right", value: (r) => safeDiv(r.crmLeads, r.sessions), cell: (r) => fmtPct(safeDiv(r.crmLeads, r.sessions), 2) },
+            { key: "pipeline", header: "Pipeline", align: "right", cell: (r) => (access.canReadLeads ? fmtUsd(r.pipeline, true) : "—") },
+            { key: "conv", header: "Lead rate", align: "right", value: (r) => safeDiv(r.crmLeads, r.sessions), cell: (r) => (access.canReadLeads ? fmtPct(safeDiv(r.crmLeads, r.sessions), 2) : "—") },
           ]}
         />
       </div>

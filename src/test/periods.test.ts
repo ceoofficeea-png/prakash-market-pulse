@@ -24,8 +24,8 @@ describe("Demo account aggregates", () => {
     const all = socialDemo("2026-11-01", "2026-11-05");
     const individual = DEMO_ACCOUNTS.map((a) => socialDemo("2026-11-01", "2026-11-05", [a.id]));
     // Daily rounding is performed per aggregate; allow its bounded rounding difference.
-    expect(Math.abs(all.impressions - individual.reduce((n, a) => n + a.impressions, 0))).toBeLessThan(DEMO_ACCOUNTS.length * 5);
-    expect(all.selected).toHaveLength(17);
+    expect(Math.abs(all.impressions - individual.reduce((n, a) => n + a.impressions, 0))).toBeLessThan(12 * 5);
+    expect(all.selected).toHaveLength(12);
     expect(socialDemo("2026-11-01", "2026-11-05", ["facebook-0"]).selected.map((a) => a.name)).toEqual(["Prakash Pumps Main"]);
   });
   it("country and channel filters constrain page analytics", () => {
@@ -37,17 +37,5 @@ describe("Demo account aggregates", () => {
     expect(day.inquiries).toBeLessThanOrEqual(day.conversations);
     expect(day.response).toBe(day.rows[0] ? day.rows[0].responseTotal / day.rows[0].conversations : -1);
     expect(socialDemo("2026-11-05", "2026-11-05", [], ["ZZ"]).conversations).toBe(0);
-  });
-});
-import { accountBreakdown } from "@/lib/social-demo";
-describe("platform account breakdown", () => {
-  it("lists all 5 Instagram accounts separately", () => {
-    const rows = accountBreakdown("2026-11-01", "2026-11-05", "instagram");
-    expect(rows).toHaveLength(5);
-    expect(new Set(rows.map((r) => r.platform))).toEqual(new Set(["instagram"]));
-  });
-  it("each account row matches that account alone", () => {
-    const row = accountBreakdown("2026-11-01", "2026-11-05", "instagram").find((r) => r.id === "instagram-3")!;
-    expect(row.impressions).toBe(socialDemo("2026-11-01", "2026-11-05", ["instagram-3"]).impressions);
   });
 });

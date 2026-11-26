@@ -12,15 +12,11 @@ export function LogoMark({ className }: { className?: string }) {
 }
 
 export function Logo({ collapsed }: { collapsed?: boolean }) {
+  if (collapsed) return <img src="/favicon.svg" alt="Prakash Pump" className="size-8" />;
   return (
-    <div className="flex items-center gap-2.5">
-      <LogoMark />
-      {!collapsed && (
-        <div className="leading-tight">
-          <div className="font-display text-sm font-semibold text-foreground">Prakash Pump</div>
-          <div className="eyebrow text-[10px]">Marketing Command</div>
-        </div>
-      )}
-    </div>
+    <span className="flex flex-col items-start gap-1">
+      <img src="/prakash-logo.svg" alt="Prakash Pump" className="h-8 w-auto" />
+      <span className="eyebrow text-[10px]">Marketing Command</span>
+    </span>
   );
 }

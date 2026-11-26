@@ -7,14 +7,14 @@ import { toast } from "sonner";
 import { BarsChart, ChartCard, TrendChart } from "@/components/app/charts";
 import { DataTable } from "@/components/app/data-table";
 import { KpiCard } from "@/components/app/kpi-card";
-import { DemoNote, KpiGrid, PageHeader } from "@/components/app/page";
+import { DemoNote, KpiGrid, LeadRestricted, PageHeader } from "@/components/app/page";
 import { StatusBadge } from "@/components/app/status-badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { totals, useCompetitors, useCurrentUser, useInsights, useLeads, useLookups, useMetrics, useReports, useWeb } from "@/lib/api";
 import { inRange, useFilters } from "@/lib/filters";
 import { downloadCsv, fmtCompact, fmtDate, fmtDateTime, fmtNum, fmtPct, fmtUsd, pctChange, safeDiv } from "@/lib/format";
-import { can } from "@/lib/permissions";
+import { can, canReadLeads } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({ meta: [{"title": "CEO Dashboard & Reports \u2014 Prakash Pump"}, {"name": "description", "content": "CEO Dashboard & Reports analytics and records for the Prakash Pump marketing team."}, {"property": "og:title", "content": "CEO Dashboard & Reports \u2014 Prakash Pump"}, {"property": "og:description", "content": "CEO Dashboard & Reports analytics and records for the Prakash Pump marketing team."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary_large_image"}] }),
@@ -26,6 +26,7 @@ function ReportsPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const me = useCurrentUser();
+  const canRead = canReadLeads(me.data?.roles ?? []);
   const { country, member } = useLookups();
   const monthly = useMetrics("month");
   const cur = useMetrics("all");
@@ -80,9 +81,13 @@ function ReportsPage() {
       { metric: "Cost per lead (USD)", current: safeDiv(c.spend, c.leads).toFixed(2), previous: safeDiv(p.spend, p.leads).toFixed(2) },
       { metric: "Attributed revenue (USD)", current: c.revenue.toFixed(0), previous: p.revenue.toFixed(0) },
       { metric: "ROAS", current: safeDiv(c.revenue, c.spend).toFixed(2), previous: safeDiv(p.revenue, p.spend).toFixed(2) },
-      { metric: "CRM leads", current: crm.total, previous: "" },
-      { metric: "Open pipeline (USD)", current: crm.pipeline.toFixed(0), previous: "" },
-      { metric: "Won value (USD)", current: crm.won.toFixed(0), previous: "" },
+      ...(canRead
+        ? [
+            { metric: "CRM leads", current: String(crm.total), previous: "" },
+            { metric: "Open pipeline (USD)", current: crm.pipeline.toFixed(0), previous: "" },
+            { metric: "Won value (USD)", current: crm.won.toFixed(0), previous: "" },
+          ]
+        : []),
       { metric: "Web sessions", current: sessions, previous: "" },
     ]);
 
@@ -105,10 +110,10 @@ function ReportsPage() {
         <KpiCard label="Marketing-sourced revenue" value={fmtUsd(c.revenue, true)} delta={pctChange(c.revenue, p.revenue)} />
         <KpiCard label="Marketing investment" value={fmtUsd(c.spend, true)} delta={pctChange(c.spend, p.spend)} />
         <KpiCard label="Return on ad spend" value={`${safeDiv(c.revenue, c.spend).toFixed(1)}×`} delta={pctChange(safeDiv(c.revenue, c.spend), safeDiv(p.revenue, p.spend))} />
-        <KpiCard label="Open pipeline" value={fmtUsd(crm.pipeline, true)} delta={pctChange(crm.pipeline, previousPipeline)} hint={`${fmtNum(crm.total)} CRM leads`} />
+        <KpiCard label="Open pipeline" value={canRead ? fmtUsd(crm.pipeline, true) : "—"} delta={canRead ? pctChange(crm.pipeline, previousPipeline) : null} hint={canRead ? `${fmtNum(crm.total)} CRM leads` : "Hidden for your role"} />
       </KpiGrid>
       <KpiGrid cols={4}>
-        <KpiCard label="Won deals value" value={fmtUsd(crm.won, true)} delta={pctChange(crm.won, previousWon)} hint={`win rate ${fmtPct(crm.winRate)}`} />
+        <KpiCard label="Won deals value" value={canRead ? fmtUsd(crm.won, true) : "—"} delta={canRead ? pctChange(crm.won, previousWon) : null} hint={canRead ? `win rate ${fmtPct(crm.winRate)}` : "Hidden for your role"} />
         <KpiCard label="Paid leads" value={fmtNum(c.leads)} delta={pctChange(c.leads, p.leads)} />
         <KpiCard label="Website sessions" value={fmtCompact(sessions)} delta={pctChange(sessions, Number(previousWeb.data?.[0]?.sessions ?? 0))} />
         <KpiCard label="Global market share" value={`${self?.market_share ?? 0}%`} hint="estimate" />
@@ -125,6 +130,7 @@ function ReportsPage() {
 
       <div className="mt-4 grid gap-4 xl:grid-cols-2">
         <ChartCard title="Top markets by won value">
+          {!canRead && <LeadRestricted className="mb-2" />}
           <ul className="divide-y divide-border/60 text-sm">
             {crm.byCountry.slice(0, 6).map(([code, v]) => (
               <li key={code}>

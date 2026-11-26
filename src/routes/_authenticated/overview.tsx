@@ -6,9 +6,9 @@ import { BarList, ChartCard, DonutChart, TrendChart } from "@/components/app/cha
 import { AVATAR_FUNNEL, AVATAR_KPIS } from "@/lib/avatar-demo";
 import { DataTable } from "@/components/app/data-table";
 import { KpiCard } from "@/components/app/kpi-card";
-import { DemoNote, KpiGrid, PageHeader } from "@/components/app/page";
+import { DemoNote, KpiGrid, LeadRestricted, PageHeader } from "@/components/app/page";
 import { StatusBadge } from "@/components/app/status-badge";
-import { totals, useInsights, useLeads, useLookups, useMetrics, useWeb } from "@/lib/api";
+import { totals, useInsights, useLeadAccess, useLeads, useLookups, useMetrics, useWeb } from "@/lib/api";
 import { inRange, useFilters } from "@/lib/filters";
 import { fmtCompact, fmtNum, grainFor, fmtPct, fmtUsd, LEAD_STAGES, pctChange, platformColor, platformLabel, safeDiv } from "@/lib/format";
 
@@ -33,6 +33,7 @@ function Overview() {
   const web = useWeb("all");
   const webPrev = useWeb("all", { from: f.prevFrom, to: f.prevTo });
   const leads = useLeads();
+  const access = useLeadAccess();
   const insights = useInsights();
 
   const cur = totals(trend.data);
@@ -64,8 +65,7 @@ function Overview() {
     { label: "Clicks", value: cur.clicks },
     { label: "Conversions", value: cur.conversions },
     { label: "Paid leads", value: cur.leads },
-    { label: "CRM leads", value: crm.count },
-    { label: "Won deals", value: crm.won },
+    ...(access.canReadLeads ? [{ label: "CRM leads", value: crm.count }, { label: "Won deals", value: crm.won }] : []),
   ];
 
   const campaignRows = (byCampaign.data ?? [])
@@ -83,7 +83,7 @@ function Overview() {
       />
 
       <KpiGrid cols={6}>
-        <KpiCard label="Media spend" value={fmtUsd(cur.spend, true)} delta={pctChange(cur.spend, pre.spend)} icon={CircleDollarSign} spark={spark("spend")} hint="vs prev." onClick={() => navigate({ to: "/ads" })} />
+        <KpiCard label="Media spend" value={fmtUsd(cur.spend, true)} delta={pctChange(cur.spend, pre.spend)} icon={CircleDollarSign} spark={spark("spend")} onClick={() => navigate({ to: "/ads" })} />
         <KpiCard label="Paid leads" value={fmtNum(cur.leads)} delta={pctChange(cur.leads, pre.leads)} icon={Target} spark={spark("leads")} color="var(--chart-2)" onClick={() => navigate({ to: "/crm" })} />
         <KpiCard label="Cost per lead" value={fmtUsd(safeDiv(cur.spend, cur.leads))} delta={pctChange(safeDiv(cur.spend, cur.leads), safeDiv(pre.spend, pre.leads))} invert icon={TrendingUp} />
         <KpiCard label="Attributed revenue" value={fmtUsd(cur.revenue, true)} delta={pctChange(cur.revenue, pre.revenue)} icon={CircleDollarSign} spark={spark("revenue")} color="var(--chart-3)" />
@@ -174,14 +174,18 @@ function Overview() {
 
         <ChartCard
           title="CRM pipeline"
-          subtitle={`${fmtUsd(crm.pipeline, true)} open · ${fmtUsd(crm.wonValue, true)} won`}
+          subtitle={access.canReadLeads ? `${fmtUsd(crm.pipeline, true)} open · ${fmtUsd(crm.wonValue, true)} won` : undefined}
           actions={
             <Link to="/crm" className="text-xs text-primary hover:underline">
               Open CRM
             </Link>
           }
         >
-          <BarList items={crm.byStage.map((s) => ({ id: s.key, label: <StatusBadge value={s.key} />, value: s.value, sub: `${s.count}` }))} fmt={(v) => fmtUsd(v, true)} color="var(--chart-2)" onSelect={() => navigate({ to: "/crm" })} />
+          {access.canReadLeads ? (
+            <BarList items={crm.byStage.map((s) => ({ id: s.key, label: <StatusBadge value={s.key} />, value: s.value, sub: `${s.count}` }))} fmt={(v) => fmtUsd(v, true)} color="var(--chart-2)" onSelect={() => navigate({ to: "/crm" })} />
+          ) : (
+            <LeadRestricted />
+          )}
         </ChartCard>
       </div>
 

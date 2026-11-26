@@ -57,6 +57,27 @@
       "when": 1795151898277,
       "tag": "0007_signup_viewer_only_and_countries_roles",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795156948253,
+      "tag": "0008_first_account_admin_bootstrap",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795163000000,
+      "tag": "0009_normalize_ads_platform_ids",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795564800000,
+      "tag": "0010_restrict_role_writes_and_lead_reads",
+      "breakpoints": true
     }
   ]
 }

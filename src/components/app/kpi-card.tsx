@@ -1,8 +1,10 @@
 import { ArrowDownRight, ArrowUpRight, type LucideIcon } from "lucide-react";
+import { useId } from "react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 
-import { useComparisonLabel } from "@/lib/filters";
 import { fmtPct } from "@/lib/format";
+import { useOptionalFilters } from "@/lib/filters";
+import { comparisonLabel } from "@/lib/periods";
 import { cn } from "@/lib/utils";
 
 interface KpiCardProps {
@@ -18,10 +20,26 @@ interface KpiCardProps {
   onClick?: (() => void) | undefined;
 }
 
-export function KpiCard({ label, value, delta, invert, hint, icon: Icon, spark, color = "var(--chart-1)", onClick }: KpiCardProps) {
-  const vs = useComparisonLabel();
+export function KpiCard({
+  label,
+  value,
+  delta,
+  invert,
+  hint,
+  icon: Icon,
+  spark,
+  color = "var(--chart-1)",
+  onClick,
+}: KpiCardProps) {
   const good = delta == null ? null : invert ? delta < 0 : delta > 0;
+  // Name the window being compared against ("vs. 27 Oct – 25 Nov 2026") rather
+  // than a generic "previous period".
+  const filters = useOptionalFilters();
+  const versus = filters ? comparisonLabel(filters.prevFrom, filters.prevTo) : "previous period";
   const data = spark?.map((v, i) => ({ i, v }));
+  // Gradient ids must be unique: two cards with the same label used to share one
+  // gradient and inherit each other's colour.
+  const gradientId = `spark-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   return (
     <div
       onClick={onClick}
@@ -39,12 +57,33 @@ export function KpiCard({ label, value, delta, invert, hint, icon: Icon, spark, 
           <div className="num text-2xl font-semibold text-foreground">{value}</div>
           <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
             {delta != null && Number.isFinite(delta) && (
-              <span className={cn("inline-flex flex-wrap items-center gap-0.5 num font-medium", delta === 0 ? "text-muted-foreground" : good ? "text-success" : "text-destructive")}>
-                {delta >= 0 ? <ArrowUpRight className="size-3.5" /> : <ArrowDownRight className="size-3.5" />}
-                {fmtPct(Math.abs(delta))} <span className="font-normal text-muted-foreground">{vs}</span>
+              <span
+                className={cn(
+                  "inline-flex flex-wrap items-center gap-0.5 num font-medium",
+                  delta === 0
+                    ? "text-muted-foreground"
+                    : good
+                      ? "text-success"
+                      : "text-destructive",
+                )}
+              >
+                {delta >= 0 ? (
+                  <ArrowUpRight className="size-3.5" />
+                ) : (
+                  <ArrowDownRight className="size-3.5" />
+                )}
+                {fmtPct(Math.abs(delta))}{" "}
+                <span className="font-normal text-muted-foreground">vs. {versus}</span>
               </span>
             )}
-            {(delta == null || !Number.isFinite(delta)) && <span className="text-muted-foreground" title="No comparable previous-period value is available">{vs}: —</span>}
+            {(delta == null || !Number.isFinite(delta)) && (
+              <span
+                className="text-muted-foreground"
+                title="No comparable previous-period value is available"
+              >
+                vs. {versus}: —
+              </span>
+            )}
             {hint && <span className="text-muted-foreground">{hint}</span>}
           </div>
         </div>
@@ -53,12 +92,19 @@ export function KpiCard({ label, value, delta, invert, hint, icon: Icon, spark, 
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data}>
                 <defs>
-                  <linearGradient id={`spark-${label.replace(/\W/g, "")}`} x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor={color} stopOpacity={0.45} />
                     <stop offset="100%" stopColor={color} stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <Area type="monotone" dataKey="v" stroke={color} strokeWidth={1.5} fill={`url(#spark-${label.replace(/\W/g, "")})`} isAnimationActive={false} />
+                <Area
+                  type="monotone"
+                  dataKey="v"
+                  stroke={color}
+                  strokeWidth={1.5}
+                  fill={`url(#${gradientId})`}
+                  isAnimationActive={false}
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>

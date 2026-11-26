@@ -31,4 +31,3 @@
 - [x] Prakash AI Avatar analytics tab on /ai (KPIs, model breakdown, sentiment tags, conversion funnel)
 - [x] CRM: "Prakash AI Avatar" lead source filter/badge + avatar consultation panel on lead detail
 - [x] Overview: AI Avatar summary strip linking to avatar analytics
-- [x] Platform-wise account-by-account breakdown (5 Instagram accounts, YouTube channels)

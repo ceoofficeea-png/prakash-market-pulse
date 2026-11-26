@@ -5,11 +5,11 @@ import { useMemo, useState } from "react";
 import { BarList, ChartCard, DonutChart, TrendChart } from "@/components/app/charts";
 import { DataTable } from "@/components/app/data-table";
 import { KpiCard } from "@/components/app/kpi-card";
-import { DemoNote, KpiGrid, PageHeader } from "@/components/app/page";
+import { DemoNote, KpiGrid, LoadingBlock, NoAccess, PageHeader } from "@/components/app/page";
 import { StatusBadge } from "@/components/app/status-badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { useLeads, useLookups, type Lead } from "@/lib/api";
+import { useLeadAccess, useLeads, useLookups, type Lead } from "@/lib/api";
 import { inRange, useFilters } from "@/lib/filters";
 import { fmtDate, fmtNum, fmtPct, fmtUsd, LEAD_STAGES, pctChange, safeDiv } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -30,6 +30,7 @@ function CrmPage() {
   const f = useFilters();
   const navigate = useNavigate();
   const leads = useLeads();
+  const access = useLeadAccess();
   const { country, member, campaign, team } = useLookups();
   const [view, setView] = useState<"table" | "board">("table");
   const [stage, setStage] = useState("all");
@@ -49,6 +50,9 @@ function CrmPage() {
       ),
     [leads.data, f.from, f.to, f.countries, f.campaigns, stage, owner, source],
   );
+
+  if (access.loading) return <LoadingBlock />;
+  if (!access.canReadLeads) return <NoAccess what="CRM leads" />;
 
   const previousRows = (leads.data ?? []).filter((l) => inRange(l.created_at, f.prevFrom, f.prevTo) && (!f.countries.length || f.countries.includes(l.country_code)) && (!f.campaigns.length || (l.campaign_id != null && f.campaigns.includes(l.campaign_id))) && (stage === "all" || l.stage === stage) && (owner === "all" || String(l.owner_id) === owner));
   const previousOpen = previousRows.filter((l) => !["Won", "Lost"].includes(l.stage));

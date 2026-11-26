@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Prakash">
+  <defs>
+    <linearGradient id="pk-edge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2f5ea8" />
+      <stop offset="1" stop-color="#101f52" />
+    </linearGradient>
+    <linearGradient id="pk-face" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#77dcf4" />
+      <stop offset="0.45" stop-color="#38b9e6" />
+      <stop offset="1" stop-color="#1c84c8" />
+    </linearGradient>
+  </defs>
+  <rect x="1" y="1" width="62" height="62" rx="14" fill="url(#pk-edge)" />
+  <rect x="6" y="6" width="52" height="52" rx="10" fill="url(#pk-face)" />
+  <g fill="#05070c" stroke="#05070c" stroke-width="1.4" stroke-linejoin="round">
+    <path transform="translate(14.16 46)" d="M22.73 -34Q25.9 -34 28.37 -32.54Q30.84 -31.08 32.22 -28.54Q33.6 -25.99 33.6 -22.83L33.6 -22.83L33.6 -22.19Q33.6 -19.03 32.22 -16.46Q30.84 -13.89 28.37 -12.43Q25.9 -10.97 22.73 -10.97L22.73 -10.97L14.58 -10.97L14.58 0L3.66 0L3.66 -34L22.73 -34M14.58 -25.94L14.58 -18.93L19.08 -18.93Q20.81 -18.93 21.67 -19.82Q22.53 -20.71 22.53 -22.24L22.53 -22.24L22.53 -22.63Q22.53 -24.22 21.67 -25.08Q20.81 -25.94 19.08 -25.94L19.08 -25.94L14.58 -25.94" />
+  </g>
+</svg>
