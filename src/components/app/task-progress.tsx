@@ -32,7 +32,26 @@ import type { TeamMember } from "@/lib/api";
 import { fmtDate, TASK_STATUSES } from "@/lib/format";
 import { updateMyTask } from "@/lib/team.functions";
 
-type Task = Database["public"]["Tables"]["team_tasks"]["Row"];
+export type Task = Database["public"]["Tables"]["team_tasks"]["Row"];
+
+/** Review state of a completion request. */
+export function ApprovalBadge({ status }: { status?: string | null | undefined }) {
+  if (!status || status === "none") return null;
+  const styles: Record<string, { label: string; className: string }> = {
+    pending: { label: "Pending approval", className: "border-warning/50 text-warning" },
+    approved: { label: "Approved", className: "border-success/50 text-success" },
+    rejected: { label: "Rejected", className: "border-destructive/50 text-destructive" },
+  };
+  const style = styles[status];
+  if (!style) return null;
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${style.className}`}
+    >
+      {style.label}
+    </span>
+  );
+}
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
 const stamp = (iso: string) =>
@@ -47,7 +66,7 @@ const stamp = (iso: string) =>
  * Progress editor for one task.
  * The server decides whether this person may touch it and writes the audit row.
  */
-export function UpdateTaskDialog({ task }: { task: Task }) {
+export function UpdateTaskDialog({ task, isStaff = false }: { task: Task; isStaff?: boolean }) {
   const qc = useQueryClient();
   const update = useServerFn(updateMyTask);
   const [open, setOpen] = useState(false);
@@ -140,6 +159,11 @@ export function UpdateTaskDialog({ task }: { task: Task }) {
                 value={completedOn}
                 onChange={(e) => setCompletedOn(e.target.value)}
               />
+              {!isStaff && (
+                <p className="text-xs text-muted-foreground">
+                  Marking this Done sends an approval request to your manager.
+                </p>
+              )}
             </div>
           )}
           <div className="space-y-1.5">
@@ -222,7 +246,15 @@ const isDone = (t: Task) => t.status === "Done";
 const isOpen = (t: Task) => !isDone(t);
 
 /** The signed-in employee's own workload, with the update action on every task. */
-export function MyTasksPanel({ member, tasks }: { member: TeamMember; tasks: Task[] }) {
+export function MyTasksPanel({
+  member,
+  tasks,
+  isStaff = false,
+}: {
+  member: TeamMember;
+  tasks: Task[];
+  isStaff?: boolean;
+}) {
   const mine = useMemo(() => tasks.filter((t) => t.member_id === member.id), [tasks, member.id]);
   const today = todayIso();
   const open = mine.filter(isOpen);
@@ -315,12 +347,21 @@ export function MyTasksPanel({ member, tasks }: { member: TeamMember; tasks: Tas
                 value: (r) => Number(r.progress_pct ?? 0),
                 cell: (r) => <span className="num text-xs">{Number(r.progress_pct ?? 0)}%</span>,
               },
-              { key: "status", header: "Status", cell: (r) => <StatusBadge value={r.status} /> },
+              {
+                key: "status",
+                header: "Status",
+                cell: (r) => (
+                  <div className="flex flex-wrap items-center gap-1">
+                    <StatusBadge value={r.status} />
+                    <ApprovalBadge status={r.approval_status} />
+                  </div>
+                ),
+              },
               {
                 key: "update",
                 header: "",
                 sortable: false,
-                cell: (r) => <UpdateTaskDialog task={r} />,
+                cell: (r) => <UpdateTaskDialog task={r} isStaff={isStaff} />,
               },
             ]}
           />

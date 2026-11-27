@@ -45,7 +45,7 @@ Fill `.env` from **Supabase → Project Settings → API**:
 Migrations live in `drizzle/migrations/` and must be applied **in order**, once, to the
 project's database. Either:
 
-- **SQL editor:** paste and run `0000` … `0013` in filename order, or
+- **SQL editor:** paste and run `0000` … `0014` in filename order, or
 - **CLI:** set `LOVABLE_DB_MIGRATION_URL` and run `bun x drizzle-kit push`.
 
 | File          | What it adds                                                                      |
@@ -56,9 +56,14 @@ project's database. Either:
 | `0011`        | Social metric columns, `social_account_daily` unique key, `social_breakdown` dims |
 | `0012`        | Unique usernames (`profiles.username`), optional `profiles.contact_email`         |
 | `0013`        | `team_members.user_id`, task progress columns, `team_task_updates` history + RLS  |
+| `0014`        | Task completion approvals (`approval_status`), direct-manager decision policy    |
 
-`0012` and `0013` are required for username sign-in and for employee task updates. Until they
-run, the app still loads, but creating an account or saving progress fails with a clear error.
+`0012`–`0014` are required for username sign-in, employee task updates and the approval section
+in _My Workspace_. Until they run, the app still loads and those areas fail with a clear error.
+
+`0011` is safe to re-run and doubles as a repair: if it was never applied, the social
+Likes/Comments/Shares chips read zero and the Reach-by-platform chart is empty. Re-run it, then
+reload a platform export.
 
 ### Supabase dashboard settings you must check yourself
 

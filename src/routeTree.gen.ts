@@ -16,6 +16,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdsRouteImport } from './routes/_authenticated/ads'
 import { Route as AuthenticatedAiRouteImport } from './routes/_authenticated/ai'
+import { Route as AuthenticatedMeRouteImport } from './routes/_authenticated/me'
 import { Route as AuthenticatedOverviewRouteImport } from './routes/_authenticated/overview'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedWebRouteImport } from './routes/_authenticated/web'
@@ -66,6 +67,11 @@ const AuthenticatedAdsRoute = AuthenticatedAdsRouteImport.update({
 const AuthenticatedAiRoute = AuthenticatedAiRouteImport.update({
   id: '/ai',
   path: '/ai',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMeRoute = AuthenticatedMeRouteImport.update({
+  id: '/me',
+  path: '/me',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedOverviewRoute = AuthenticatedOverviewRouteImport.update({
@@ -170,6 +176,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/ads': typeof AuthenticatedAdsRoute
   '/ai': typeof AuthenticatedAiRoute
+  '/me': typeof AuthenticatedMeRoute
   '/overview': typeof AuthenticatedOverviewRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/web': typeof AuthenticatedWebRoute
@@ -195,6 +202,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/ads': typeof AuthenticatedAdsRoute
   '/ai': typeof AuthenticatedAiRoute
+  '/me': typeof AuthenticatedMeRoute
   '/overview': typeof AuthenticatedOverviewRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/web': typeof AuthenticatedWebRoute
@@ -222,6 +230,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/ads': typeof AuthenticatedAdsRoute
   '/_authenticated/ai': typeof AuthenticatedAiRoute
+  '/_authenticated/me': typeof AuthenticatedMeRoute
   '/_authenticated/overview': typeof AuthenticatedOverviewRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/web': typeof AuthenticatedWebRoute
@@ -249,6 +258,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/ads'
     | '/ai'
+    | '/me'
     | '/overview'
     | '/reports'
     | '/web'
@@ -274,6 +284,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/ads'
     | '/ai'
+    | '/me'
     | '/overview'
     | '/reports'
     | '/web'
@@ -300,6 +311,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/ads'
     | '/_authenticated/ai'
+    | '/_authenticated/me'
     | '/_authenticated/overview'
     | '/_authenticated/reports'
     | '/_authenticated/web'
@@ -375,6 +387,13 @@ declare module '@tanstack/react-router' {
       path: '/ai'
       fullPath: '/ai'
       preLoaderRoute: typeof AuthenticatedAiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/me': {
+      id: '/_authenticated/me'
+      path: '/me'
+      fullPath: '/me'
+      preLoaderRoute: typeof AuthenticatedMeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/overview': {
@@ -503,6 +522,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAdsRoute: typeof AuthenticatedAdsRoute
   AuthenticatedAiRoute: typeof AuthenticatedAiRoute
+  AuthenticatedMeRoute: typeof AuthenticatedMeRoute
   AuthenticatedOverviewRoute: typeof AuthenticatedOverviewRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedWebRoute: typeof AuthenticatedWebRoute
@@ -526,6 +546,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAdsRoute: AuthenticatedAdsRoute,
   AuthenticatedAiRoute: AuthenticatedAiRoute,
+  AuthenticatedMeRoute: AuthenticatedMeRoute,
   AuthenticatedOverviewRoute: AuthenticatedOverviewRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedWebRoute: AuthenticatedWebRoute,

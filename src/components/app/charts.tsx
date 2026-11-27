@@ -151,10 +151,10 @@ export function TrendChart({
   );
 }
 
-export function LinesChart({ data, previousData, xKey = "key", series, height = 260, fmt }: { data: Record<string, unknown>[]; previousData?: Record<string, unknown>[] | undefined; xKey?: string | undefined; series: Series[]; height?: number | undefined; fmt?: Fmt | undefined }) {
+export function LinesChart({ data, previousData, xKey = "key", series, height = 260, fmt, showComparison = true }: { data: Record<string, unknown>[]; previousData?: Record<string, unknown>[] | undefined; xKey?: string | undefined; series: Series[]; height?: number | undefined; fmt?: Fmt | undefined; showComparison?: boolean | undefined }) {
   const tickFmt = (v: string) => (isDateKey(v) ? fmtShortDate(v) : v);
   return (
-    <><TrendComparison data={data} previousData={previousData} series={series} /><ResponsiveContainer width="100%" height={height}>
+    <>{showComparison && <TrendComparison data={data} previousData={previousData} series={series} />}<ResponsiveContainer width="100%" height={height}>
       <LineChart data={data} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
         <CartesianGrid vertical={false} strokeDasharray="3 3" />
         <XAxis dataKey={xKey} tickFormatter={tickFmt} tickLine={false} axisLine={false} minTickGap={24} />

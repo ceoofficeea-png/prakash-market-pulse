@@ -1,10 +1,15 @@
--- 0011_social_metric_columns.sql
+-- 0011: social metric columns (safe to re-run).
 --
 -- The social module used to render generated fixtures because the daily table
 -- only stored followers, impressions and engagements. Add the platform-native
 -- parts the screen shows, make (account_id, date) unique so a re-load can
 -- upsert, and widen social_breakdown so one SQL pass feeds the KPIs, the
 -- audience split and the trend chart.
+--
+-- Every statement is idempotent, so this file also repairs an existing database
+-- where the migration was never applied: without it the aggregation collapses
+-- every row into a single "all" key, so Likes/Comments/Shares read zero and the
+-- Reach-by-platform chart is empty.
 
 alter table public.social_account_daily
   add column if not exists reach       int not null default 0,

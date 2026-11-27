@@ -49,7 +49,9 @@ export function AppTopbar() {
 
   const name = me.data?.profile?.full_name || me.data?.email || "";
   const visible = allowedModules(me.data?.modules ?? null, me.data?.role ?? "viewer");
-  const navItems = NAV.flatMap((g) => g.items).filter((i) => visible.includes(i.module));
+  const navItems = NAV.flatMap((g) => g.items).filter(
+    (i) => i.always === true || (i.module ? visible.includes(i.module) : true),
+  );
   const go = (fn: () => void) => {
     setOpen(false);
     fn();

@@ -7,7 +7,11 @@ import { KpiCard } from "@/components/app/kpi-card";
 import { DemoNote, KpiGrid, PageHeader } from "@/components/app/page";
 import { StatusBadge } from "@/components/app/status-badge";
 import { MyTasksPanel } from "@/components/app/task-progress";
-import { AddTeammateDialog, AssignTaskDialog } from "@/components/app/team-actions";
+import {
+  AddTeammateDialog,
+  AssignTaskDialog,
+  RemoveTeammateDialog,
+} from "@/components/app/team-actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -135,7 +139,7 @@ function TeamPage() {
         }
       />
 
-      {mine && <MyTasksPanel member={mine} tasks={tasks.data ?? []} />}
+      {mine && <MyTasksPanel member={mine} tasks={tasks.data ?? []} isStaff={canEdit} />}
 
       <KpiGrid cols={5}>
         <KpiCard label="Team members" value={String(rows.length)} />
@@ -271,6 +275,16 @@ function TeamPage() {
                 header: "Status",
                 cell: (r) => (
                   <StatusBadge value={r.blocked ? "Blocked" : r.overdue > 2 ? "High" : "Active"} />
+                ),
+              },
+              {
+                key: "remove",
+                header: "",
+                sortable: false,
+                cell: (r) => (
+                  <span onClick={(event) => event.stopPropagation()}>
+                    {canEdit && <RemoveTeammateDialog member={r} compact />}
+                  </span>
                 ),
               },
             ]}

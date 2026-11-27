@@ -1162,6 +1162,10 @@ export type Database = {
       }
       team_tasks: {
         Row: {
+          approval_at: string | null
+          approval_by: string | null
+          approval_note: string | null
+          approval_status: string
           campaign_id: number | null
           completed_at: string | null
           due_date: string
@@ -1177,6 +1181,10 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          approval_at?: string | null
+          approval_by?: string | null
+          approval_note?: string | null
+          approval_status?: string
           campaign_id?: number | null
           completed_at?: string | null
           due_date: string
@@ -1192,6 +1200,10 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          approval_at?: string | null
+          approval_by?: string | null
+          approval_note?: string | null
+          approval_status?: string
           campaign_id?: number | null
           completed_at?: string | null
           due_date?: string

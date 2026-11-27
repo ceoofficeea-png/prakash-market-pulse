@@ -292,15 +292,27 @@ export function OverallView({
             </Select>
           }
         >
-          <LinesChart
-            data={trend.data}
-            series={PLATFORM_ORDER.map((id) => ({
-              key: id,
-              label: PLATFORM_META[id].label,
-              color: PLATFORM_META[id].color,
-            }))}
-            height={240}
-          />
+          {trend.data.length ? (
+            <LinesChart
+              data={trend.data}
+              series={PLATFORM_ORDER.map((id) => ({
+                key: id,
+                label: PLATFORM_META[id].label,
+                color: PLATFORM_META[id].color,
+              }))}
+              height={240}
+              showComparison={false}
+            />
+          ) : (
+            <div className="flex h-[240px] flex-col items-center justify-center gap-1 text-center text-sm text-muted-foreground">
+              <span>
+                {trend.isLoading ? "Loading daily trend…" : "No daily rows for this range yet"}
+              </span>
+              <span className="text-xs">
+                Load each account's daily metrics for this date range to plot the trend.
+              </span>
+            </div>
+          )}
         </ChartCard>
       </div>
 

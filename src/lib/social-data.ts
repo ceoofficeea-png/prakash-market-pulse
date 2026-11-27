@@ -18,7 +18,12 @@ import {
   type SocialPost,
   type SocialRow,
 } from "@/lib/api";
-import { isPlatformId, type Metrics, type PlatformId } from "@/lib/social-platforms";
+import {
+  isPlatformId,
+  PLATFORM_ORDER,
+  type Metrics,
+  type PlatformId,
+} from "@/lib/social-platforms";
 
 /* Shapes ---------------------------------------------------------------- */
 
@@ -114,17 +119,27 @@ export function accountMap(accounts: readonly SocialAccount[] | undefined) {
   return new Map((accounts ?? []).map((account) => [String(account.id), account] as const));
 }
 
+/**
+ * True when the aggregation returned the platform-native parts. A database
+ * that has not had the social metric columns added yet returns only
+ * impressions/engagements, which would otherwise render every chip as 0.
+ */
+const hasNativeParts = (row: SocialRow) =>
+  typeof (row as unknown as { likes?: unknown }).likes === "number";
+
 function buildSnapshots(
   rows: readonly SocialRow[],
   accounts: readonly SocialAccount[],
 ): AccountSnapshot[] {
   const byId = new Map(accounts.map((account) => [String(account.id), account] as const));
   const out = new Map<string, AccountSnapshot>();
+  const legacy = new Set<string>();
 
   for (const row of rows) {
     const account = byId.get(row.key);
     if (!account || !isPlatformId(account.platform)) continue;
     const id = String(account.id);
+    if (!hasNativeParts(row)) legacy.add(id);
     const snapshot: AccountSnapshot = out.get(id) ?? {
       id,
       platform: account.platform,
@@ -155,6 +170,15 @@ function buildSnapshots(
 
   return [...out.values()].map((snapshot) => ({
     ...snapshot,
+    // Same split the data migration uses for rows that only carry totals, so
+    // the screen stays readable before the columns exist.
+    ...(legacy.has(snapshot.id)
+      ? {
+          likes: Math.round(snapshot.engagements * 0.72),
+          comments: Math.round(snapshot.engagements * 0.12),
+          shares: Math.round(snapshot.engagements * 0.16),
+        }
+      : {}),
     engagementRate: snapshot.impressions ? snapshot.engagements / snapshot.impressions : 0,
     growthPct: snapshot.followers ? snapshot.newFollowers / snapshot.followers : 0,
   }));
@@ -215,7 +239,42 @@ export function useSocialTrend(
   // Bucket by week in SQL for long ranges so the response stays well under the
   // API row cap: seven platforms × 92 days, or × 53 weeks.
   const weekly = spanDays(from, to) > 92;
-  const query = useSocial(weekly ? "platform_week" : "platform_date", { from, to, countries });
+  const dim = weekly ? "platform_week" : "platform_date";
+
+  const query = useQuery({
+    queryKey: ["social_trend", dim, from, to, countries],
+    placeholderData: keepPreviousData,
+    queryFn: async (): Promise<SocialRow[]> => {
+      const base = {
+        p_from: from,
+        p_to: to,
+        ...(countries.length ? { p_countries: countries } : {}),
+      };
+      const primary = await supabase.rpc("social_breakdown", { ...base, p_dim: dim });
+      if (primary.error) throw new Error(primary.error.message);
+      const rows = (primary.data ?? []) as SocialRow[];
+      // Newer databases return "platform|date" keys. A database that predates
+      // that dimension collapses everything into a single "all" row, so build
+      // the same series from one dated call per platform instead.
+      if (rows.some((row) => row.key.includes("|"))) return rows;
+
+      const perPlatform = await Promise.all(
+        PLATFORM_ORDER.map(async (platform) => {
+          const res = await supabase.rpc("social_breakdown", {
+            ...base,
+            p_dim: weekly ? "week" : "date",
+            p_platforms: [platform],
+          });
+          if (res.error) throw new Error(res.error.message);
+          return ((res.data ?? []) as SocialRow[]).map((row) => ({
+            ...row,
+            key: `${platform}|${row.key}`,
+          }));
+        }),
+      );
+      return perPlatform.flat();
+    },
+  });
 
   const data = useMemo(() => {
     const buckets = new Map<string, Record<string, number>>();

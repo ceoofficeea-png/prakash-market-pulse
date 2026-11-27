@@ -5,8 +5,8 @@ import { BarsChart, ChartCard } from "@/components/app/charts";
 import { DataTable } from "@/components/app/data-table";
 import { DemoNote, DetailStat, LoadingBlock, NoAccess, PageHeader } from "@/components/app/page";
 import { StatusBadge } from "@/components/app/status-badge";
-import { TaskActivity, UpdateTaskDialog } from "@/components/app/task-progress";
-import { AssignTaskDialog } from "@/components/app/team-actions";
+import { ApprovalBadge, TaskActivity, UpdateTaskDialog } from "@/components/app/task-progress";
+import { AssignTaskDialog, RemoveTeammateDialog } from "@/components/app/team-actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { useCurrentUser, useKpis, useLeads, useLookups, useTasks } from "@/lib/api";
@@ -89,7 +89,12 @@ function MemberDetail() {
             >
               <Mail className="size-3.5" /> {m.email}
             </a>
-            {canEdit && <AssignTaskDialog memberId={m.id} members={team} />}
+            {canEdit && (
+              <>
+                <AssignTaskDialog memberId={m.id} members={team} />
+                <RemoveTeammateDialog member={m} />
+              </>
+            )}
           </div>
         }
       />
@@ -204,12 +209,21 @@ function MemberDetail() {
               </div>
             ),
           },
-          { key: "status", header: "Status", cell: (r) => <StatusBadge value={r.status} /> },
+          {
+            key: "status",
+            header: "Status",
+            cell: (r) => (
+              <div className="flex flex-wrap items-center gap-1">
+                <StatusBadge value={r.status} />
+                <ApprovalBadge status={r.approval_status} />
+              </div>
+            ),
+          },
           {
             key: "update",
             header: "",
             sortable: false,
-            cell: (r) => (canUpdate ? <UpdateTaskDialog task={r} /> : null),
+            cell: (r) => (canUpdate ? <UpdateTaskDialog task={r} isStaff={canEdit} /> : null),
           },
         ]}
       />

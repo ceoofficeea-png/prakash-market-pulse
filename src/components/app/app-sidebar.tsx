@@ -12,6 +12,7 @@ import {
   Settings2,
   Share2,
   Swords,
+  User,
   Users,
   UserSquare2,
   type LucideIcon,
@@ -37,8 +38,10 @@ interface NavItem {
   title: string;
   url: NonNullable<LinkProps["to"]>;
   icon: LucideIcon;
-  module: ModuleId;
+  module?: ModuleId | undefined;
   adminOnly?: boolean | undefined;
+  /** Shown to every signed-in person, whatever modules they hold. */
+  always?: boolean | undefined;
 }
 
 export const NAV: { label: string; items: NavItem[] }[] = [
@@ -71,6 +74,7 @@ export const NAV: { label: string; items: NavItem[] }[] = [
   {
     label: "Organisation",
     items: [
+      { title: "My Workspace", url: "/me", icon: User, always: true },
       { title: "Team Performance", url: "/team", icon: Users, module: "team" },
       { title: "Administration", url: "/admin", icon: Settings2, module: "admin", adminOnly: true },
     ],
@@ -85,6 +89,16 @@ export function AppSidebar() {
   const isAdmin = can(me.data?.roles ?? [], "admin.access");
   const visible = allowedModules(me.data?.modules ?? null, me.data?.role ?? "viewer");
 
+  // A group with nothing this person may open is dropped completely, label and all.
+  const groups = NAV.map((group) => ({
+    label: group.label,
+    items: group.items.filter(
+      (item) =>
+        (!item.adminOnly || isAdmin) &&
+        (item.always === true || (item.module ? visible.includes(item.module) : true)),
+    ),
+  })).filter((group) => group.items.length > 0);
+
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarHeader className="h-14 justify-center border-b border-sidebar-border px-3">
@@ -93,31 +107,29 @@ export function AppSidebar() {
         </Link>
       </SidebarHeader>
       <SidebarContent className="py-2">
-        {NAV.map((group) => (
+        {groups.map((group) => (
           <SidebarGroup key={group.label} className="py-1">
             <SidebarGroupLabel className="eyebrow text-[10px]">{group.label}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {group.items
-                  .filter((i) => (!i.adminOnly || isAdmin) && visible.includes(i.module))
-                  .map((item) => {
-                    const active = path === item.url || path.startsWith(item.url + "/");
-                    return (
-                      <SidebarMenuItem key={item.url}>
-                        <SidebarMenuButton
-                          asChild
-                          isActive={active}
-                          tooltip={item.title}
-                          className="data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-primary data-[active=true]:font-medium"
-                        >
-                          <Link to={item.url}>
-                            <item.icon className="size-4" />
-                            <span>{item.title}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
+                {group.items.map((item) => {
+                  const active = path === item.url || path.startsWith(item.url + "/");
+                  return (
+                    <SidebarMenuItem key={item.url}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={active}
+                        tooltip={item.title}
+                        className="data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-primary data-[active=true]:font-medium"
+                      >
+                        <Link to={item.url}>
+                          <item.icon className="size-4" />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

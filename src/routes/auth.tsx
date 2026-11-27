@@ -134,9 +134,16 @@ function AuthPage() {
     <div className="grid min-h-screen bg-background lg:grid-cols-[1.1fr_1fr]">
       <div className="relative hidden overflow-hidden border-r border-border lg:flex">
         <div className="grid-bg absolute inset-0" aria-hidden />
-        <div className="relative flex min-h-screen flex-col gap-8 p-10">
-          <div className="flex items-center gap-3 self-start">
-            <img src="/prakash-logo.svg" alt="Prakash Pump" className="h-11 w-auto" />
+        <div className="relative flex min-h-screen w-full flex-col justify-center gap-7 p-10">
+          <div className="flex min-h-0 items-center justify-center">
+            <img
+              src={heroImg}
+              alt="Prakash Pump submersible, monoblock and solar pump range"
+              className="mx-auto max-h-[56vh] w-full max-w-[42rem] rounded-2xl object-contain"
+            />
+          </div>
+          <div className="flex items-center gap-3">
+            <img src="/prakash-logo.svg" alt="Prakash Pump" className="h-14 w-auto" />
             <div className="border-l border-border pl-3">
               <div className="text-sm font-semibold tracking-[0.08em] text-foreground">
                 PRAKASH PUMP
@@ -144,33 +151,9 @@ function AuthPage() {
               <div className="eyebrow">Marketing Command Center</div>
             </div>
           </div>
-          <div className="flex min-h-0 flex-1 items-center">
-            <img
-              src={heroImg}
-              alt="Prakash Pump submersible, monoblock and solar pump range"
-              className="mx-auto max-h-[48vh] w-auto rounded-2xl"
-            />
-          </div>
-          <div>
-            <h1 className="max-w-lg text-4xl font-semibold leading-tight text-foreground">
-              Every market, campaign and lead — in one place.
-            </h1>
-            <div className="mt-6 grid max-w-lg grid-cols-3 gap-3">
-              {[
-                ["14", "Markets"],
-                ["13", "Modules"],
-                ["4", "Ad platforms"],
-              ].map(([v, l]) => (
-                <div
-                  key={l}
-                  className="rounded-lg border border-border bg-background/60 p-3 backdrop-blur"
-                >
-                  <div className="num text-2xl font-semibold text-foreground">{v}</div>
-                  <div className="eyebrow">{l}</div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <h1 className="max-w-xl text-4xl font-semibold leading-tight text-foreground">
+            Every market, campaign and lead — in one place.
+          </h1>
         </div>
       </div>
 
@@ -290,10 +273,6 @@ function AuthPage() {
                   {mode === "signin" ? "Sign in" : "Create account"}
                 </Button>
               </form>
-              <p className="mt-6 text-xs text-muted-foreground">
-                The first account created becomes the administrator. New team members start with
-                view-only access until an administrator assigns a role.
-              </p>
             </Tabs>
           )}
         </div>

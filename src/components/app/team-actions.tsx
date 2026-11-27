@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarPlus, UserPlus } from "lucide-react";
+import { CalendarPlus, Trash2, UserPlus } from "lucide-react";
 import { useId, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
@@ -30,7 +30,7 @@ import { useLookups, type TeamMember } from "@/lib/api";
 import { TASK_STATUSES } from "@/lib/format";
 import { isValidUsername } from "@/lib/login-identifier";
 import { GRANTABLE_MODULE_IDS, ROLES, type AppRole, type ModuleId } from "@/lib/permissions";
-import { assignTeamTask, createTeamMember } from "@/lib/team.functions";
+import { assignTeamTask, createTeamMember, removeTeamMember } from "@/lib/team.functions";
 
 const todayPlus = (days: number) => {
   const d = new Date();
@@ -59,6 +59,7 @@ export function AddTeammateDialog() {
   const [withLogin, setWithLogin] = useState(true);
   const [login, setLogin] = useState({ username: "", password: "", role: "analyst" as AppRole });
   const [modules, setModules] = useState<ModuleId[]>(GRANTABLE_MODULE_IDS);
+  const [error, setError] = useState<string | null>(null);
 
   const teams = Array.from(new Set(team.map((m) => m.team))).sort();
   const teamsListId = useId();
@@ -67,7 +68,6 @@ export function AddTeammateDialog() {
     form.name.trim().length >= 2 &&
     form.title.trim().length >= 2 &&
     form.team.trim().length >= 2 &&
-    form.email.includes("@") &&
     (!withLogin ||
       (isValidUsername(login.username) && login.password.length >= 8 && modules.length > 0));
 
@@ -77,12 +77,14 @@ export function AddTeammateDialog() {
     setWithLogin(true);
     setLogin({ username: "", password: "", role: "analyst" });
     setModules(GRANTABLE_MODULE_IDS);
+    setError(null);
   };
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!ready) return;
     setBusy(true);
+    setError(null);
     try {
       await create({
         data: {
@@ -109,7 +111,9 @@ export function AddTeammateDialog() {
       reset();
       setOpen(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not add the team member");
+      const message = err instanceof Error ? err.message : "Could not add the team member";
+      setError(message);
+      toast.error(message);
     } finally {
       setBusy(false);
     }
@@ -176,11 +180,11 @@ export function AddTeammateDialog() {
               </datalist>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="tm-email">Work email</Label>
+              <Label htmlFor="tm-email">Work email (optional)</Label>
               <Input
                 id="tm-email"
                 type="email"
-                required
+                placeholder="Not needed for a username sign-in"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
               />
@@ -300,6 +304,17 @@ export function AddTeammateDialog() {
             )}
           </div>
 
+          {error && (
+            <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+              {error}
+            </p>
+          )}
+          {!ready && (
+            <p className="text-xs text-muted-foreground">
+              Name, job title and team are required. With a sign-in ticked, also add a unique
+              username, a password of 8+ characters and at least one module.
+            </p>
+          )}
           <DialogFooter>
             <Button type="submit" disabled={busy || !ready}>
               {busy ? "Adding…" : "Add teammate"}
@@ -332,6 +347,7 @@ export function AssignTaskDialog({
     status: "To Do",
   });
   const [campaignId, setCampaignId] = useState("none");
+  const [error, setError] = useState<string | null>(null);
 
   const ready = form.member !== "" && form.title.trim().length >= 3 && form.dueDate !== "";
 
@@ -339,6 +355,7 @@ export function AssignTaskDialog({
     e.preventDefault();
     if (!ready) return;
     setBusy(true);
+    setError(null);
     try {
       await create({
         data: {
@@ -363,7 +380,9 @@ export function AssignTaskDialog({
       setCampaignId("none");
       setOpen(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not assign the task");
+      const message = err instanceof Error ? err.message : "Could not assign the task";
+      setError(message);
+      toast.error(message);
     } finally {
       setBusy(false);
     }
@@ -476,12 +495,117 @@ export function AssignTaskDialog({
               </Select>
             </div>
           </div>
+          {error && (
+            <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+              {error}
+            </p>
+          )}
           <DialogFooter>
             <Button type="submit" disabled={busy || !ready}>
               {busy ? "Assigning…" : "Assign task"}
             </Button>
           </DialogFooter>
         </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** Remove a teammate from the roster, optionally deleting their sign-in too. */
+export function RemoveTeammateDialog({
+  member,
+  compact = false,
+}: {
+  member: TeamMember;
+  compact?: boolean;
+}) {
+  const qc = useQueryClient();
+  const remove = useServerFn(removeTeamMember);
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [deleteLogin, setDeleteLogin] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await remove({ data: { memberId: member.id, deleteLogin } });
+      toast.success(`${member.name} removed from the team`);
+      qc.invalidateQueries({ queryKey: ["team_members"] });
+      qc.invalidateQueries({ queryKey: ["team_tasks"] });
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+      setOpen(false);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Could not remove the member";
+      setError(message);
+      toast.error(message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) {
+          setDeleteLogin(false);
+          setError(null);
+        }
+      }}
+    >
+      <DialogTrigger asChild>
+        {compact ? (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+          >
+            <Trash2 className="size-3.5" /> Remove
+          </Button>
+        ) : (
+          <Button size="sm" variant="outline" className="text-destructive hover:text-destructive">
+            <Trash2 /> Remove member
+          </Button>
+        )}
+      </DialogTrigger>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Remove {member.name}?</DialogTitle>
+          <DialogDescription>
+            Their tasks and KPI history are deleted along with their place on the team. This cannot
+            be undone.
+          </DialogDescription>
+        </DialogHeader>
+        {member.user_id && (
+          <label className="flex items-start gap-2 rounded-lg border border-border/70 p-3 text-sm">
+            <Checkbox
+              checked={deleteLogin}
+              onCheckedChange={(checked) => setDeleteLogin(checked === true)}
+            />
+            <span>
+              Also delete their sign-in account
+              <span className="mt-0.5 block text-xs text-muted-foreground">
+                Leave this unticked to remove only their place on the team and keep the login.
+              </span>
+            </span>
+          </label>
+        )}
+        {error && (
+          <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+            {error}
+          </p>
+        )}
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)} disabled={busy}>
+            Cancel
+          </Button>
+          <Button variant="destructive" onClick={submit} disabled={busy}>
+            {busy ? "Removing…" : "Remove member"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
