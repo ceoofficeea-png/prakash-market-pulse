@@ -9,6 +9,9 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    // Bun + vitest resolve zod's CJS build to an undefined default; inlining it
+    // lets Vite transform the module instead of the runtime.
+    server: { deps: { inline: ["zod"] } },
   },
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") },

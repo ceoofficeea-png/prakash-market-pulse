@@ -31,12 +31,13 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useCurrentUser } from "@/lib/api";
-import { can } from "@/lib/permissions";
+import { allowedModules, can, type ModuleId } from "@/lib/permissions";
 
 interface NavItem {
   title: string;
   url: NonNullable<LinkProps["to"]>;
   icon: LucideIcon;
+  module: ModuleId;
   adminOnly?: boolean | undefined;
 }
 
@@ -44,34 +45,34 @@ export const NAV: { label: string; items: NavItem[] }[] = [
   {
     label: "Command",
     items: [
-      { title: "Executive Overview", url: "/overview", icon: Gauge },
-      { title: "CEO Dashboard & Reports", url: "/reports", icon: BarChart3 },
-      { title: "AI Intelligence", url: "/ai", icon: Bot },
+      { title: "Executive Overview", url: "/overview", icon: Gauge, module: "overview" },
+      { title: "CEO Dashboard & Reports", url: "/reports", icon: BarChart3, module: "reports" },
+      { title: "AI Intelligence", url: "/ai", icon: Bot, module: "ai" },
     ],
   },
   {
     label: "Channels",
     items: [
-      { title: "Social Media", url: "/social", icon: Share2 },
-      { title: "Google & Meta Ads", url: "/ads", icon: MousePointerClick },
-      { title: "Website & SEO", url: "/web", icon: Globe2 },
-      { title: "Content", url: "/content", icon: FileText },
+      { title: "Social Media", url: "/social", icon: Share2, module: "social" },
+      { title: "Google & Meta Ads", url: "/ads", icon: MousePointerClick, module: "ads" },
+      { title: "Website & SEO", url: "/web", icon: Globe2, module: "web" },
+      { title: "Content", url: "/content", icon: FileText, module: "content" },
     ],
   },
   {
     label: "Growth",
     items: [
-      { title: "Campaigns", url: "/campaigns", icon: Megaphone },
-      { title: "CRM & Leads", url: "/crm", icon: UserSquare2 },
-      { title: "Markets", url: "/markets", icon: LayoutGrid },
-      { title: "Competitors", url: "/competitors", icon: Swords },
+      { title: "Campaigns", url: "/campaigns", icon: Megaphone, module: "campaigns" },
+      { title: "CRM & Leads", url: "/crm", icon: UserSquare2, module: "crm" },
+      { title: "Markets", url: "/markets", icon: LayoutGrid, module: "markets" },
+      { title: "Competitors", url: "/competitors", icon: Swords, module: "competitors" },
     ],
   },
   {
     label: "Organisation",
     items: [
-      { title: "Team Performance", url: "/team", icon: Users },
-      { title: "Administration", url: "/admin", icon: Settings2, adminOnly: true },
+      { title: "Team Performance", url: "/team", icon: Users, module: "team" },
+      { title: "Administration", url: "/admin", icon: Settings2, module: "admin", adminOnly: true },
     ],
   },
 ];
@@ -82,6 +83,7 @@ export function AppSidebar() {
   const path = useRouterState({ select: (r) => r.location.pathname });
   const me = useCurrentUser();
   const isAdmin = can(me.data?.roles ?? [], "admin.access");
+  const visible = allowedModules(me.data?.modules ?? null, me.data?.role ?? "viewer");
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -97,7 +99,7 @@ export function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu>
                 {group.items
-                  .filter((i) => !i.adminOnly || isAdmin)
+                  .filter((i) => (!i.adminOnly || isAdmin) && visible.includes(i.module))
                   .map((item) => {
                     const active = path === item.url || path.startsWith(item.url + "/");
                     return (

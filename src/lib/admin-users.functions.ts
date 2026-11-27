@@ -2,12 +2,40 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { USERNAME_PATTERN } from "@/lib/login-identifier";
+import { ALL_MODULE_IDS } from "@/lib/permissions";
+import { createLoginUser, requireRole, setUserModules, setUserRole } from "@/lib/user-admin.server";
 
-const input = z.object({
+const roleEnum = z.enum(["admin", "manager", "analyst", "viewer"]);
+const moduleEnum = z.enum(ALL_MODULE_IDS as [string, ...string[]]);
+
+const createInput = z.object({
   fullName: z.string().trim().min(2).max(100),
-  email: z.string().trim().email().max(255),
+  username: z
+    .string()
+    .trim()
+    .min(3)
+    .max(32)
+    .regex(USERNAME_PATTERN, "Use 3–32 letters, numbers, dot, dash or underscore."),
+  contactEmail: z
+    .string()
+    .trim()
+    .max(255)
+    .optional()
+    .refine((v) => !v || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v), "Enter a valid email address."),
   password: z.string().min(8).max(72),
-  role: z.enum(["admin", "manager", "analyst", "viewer"]),
+  role: roleEnum,
+  modules: z.array(moduleEnum).min(1).max(ALL_MODULE_IDS.length),
+});
+
+const roleInput = z.object({
+  userId: z.string().uuid(),
+  role: roleEnum,
+});
+
+const modulesInput = z.object({
+  userId: z.string().uuid(),
+  modules: z.array(moduleEnum).min(1).max(ALL_MODULE_IDS.length),
 });
 
 const passwordInput = z.object({
@@ -15,38 +43,58 @@ const passwordInput = z.object({
   password: z.string().min(8).max(72),
 });
 
-/** Admin-only: create a confirmed sign-in account with a chosen role. */
+/** Admin-only: create a confirmed sign-in account with a role and module access. */
 export const createTeamUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => input.parse(data))
+  .inputValidator((data: unknown) => createInput.parse(data))
   .handler(async ({ data, context }) => {
-    const { data: isAdmin, error: roleErr } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
-    if (roleErr) throw new Error(roleErr.message);
-    if (!isAdmin) throw new Error("Only administrators can create users.");
+    await requireRole(
+      context.supabase,
+      context.userId,
+      ["admin"],
+      "Only administrators can create users.",
+    );
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
-      email: data.email,
+    const created = await createLoginUser({
+      username: data.username,
       password: data.password,
-      email_confirm: true,
-      user_metadata: { full_name: data.fullName },
+      fullName: data.fullName,
+      role: data.role,
+      modules: data.modules,
+      contactEmail: data.contactEmail,
     });
-    if (error || !created.user) throw new Error(error?.message ?? "Could not create user");
 
-    const userId = created.user.id;
-    // Signup trigger assigns a default role. Replace it through the same guarded
-    // SECURITY DEFINER path the admin page uses (migration 0010) instead of
-    // writing public.user_roles directly.
-    const { error: assignErr } = await context.supabase.rpc("admin_set_user_role", {
-      _user_id: userId,
-      _role: data.role,
-    });
-    if (assignErr) throw new Error(assignErr.message);
+    return { userId: created.userId, username: created.username, role: data.role };
+  });
 
-    return { userId, email: data.email, role: data.role };
+/** Admin-only: change an existing account's role. */
+export const updateTeamUserRole = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => roleInput.parse(data))
+  .handler(async ({ data, context }) => {
+    await requireRole(
+      context.supabase,
+      context.userId,
+      ["admin"],
+      "Only administrators can change roles.",
+    );
+    await setUserRole(data.userId, data.role);
+    return { userId: data.userId, role: data.role };
+  });
+
+/** Admin-only: choose which modules an account can open. */
+export const updateTeamUserModules = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => modulesInput.parse(data))
+  .handler(async ({ data, context }) => {
+    await requireRole(
+      context.supabase,
+      context.userId,
+      ["admin"],
+      "Only administrators can change module access.",
+    );
+    await setUserModules(data.userId, data.modules);
+    return { userId: data.userId, modules: data.modules };
   });
 
 /**
@@ -58,12 +106,12 @@ export const updateTeamUserPassword = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => passwordInput.parse(data))
   .handler(async ({ data, context }) => {
-    const { data: isAdmin, error: roleErr } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
-    if (roleErr) throw new Error(roleErr.message);
-    if (!isAdmin) throw new Error("Only administrators can reset passwords.");
+    await requireRole(
+      context.supabase,
+      context.userId,
+      ["admin"],
+      "Only administrators can reset passwords.",
+    );
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
@@ -72,4 +120,33 @@ export const updateTeamUserPassword = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     return { userId: data.userId };
+  });
+
+/**
+ * Admin-only: every account with its saved module access.
+ * Module access lives in auth app metadata, which the browser cannot read for
+ * other people, so the admin screen gets it from the server.
+ */
+export const listUserAccess = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireRole(
+      context.supabase,
+      context.userId,
+      ["admin"],
+      "Only administrators can list accounts.",
+    );
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+    if (error) throw new Error(error.message);
+
+    return data.users.map((u) => ({
+      id: u.id,
+      email: u.email ?? "",
+      lastSignInAt: u.last_sign_in_at ?? null,
+      modules: Array.isArray(u.app_metadata?.["modules"])
+        ? (u.app_metadata["modules"] as string[])
+        : null,
+    }));
   });

@@ -4,8 +4,8 @@ import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
 import { LogoMark } from "@/components/app/logo";
+import { PasswordInput } from "@/components/app/password-input";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -58,7 +58,7 @@ function ResetPassword() {
         {!ready && <p className="text-sm text-muted-foreground">Open this page from the reset link in your email.</p>}
         <div className="space-y-1.5">
           <Label htmlFor="pw">New password</Label>
-          <Input id="pw" type="password" minLength={8} required value={password} onChange={(e) => setPassword(e.target.value)} />
+          <PasswordInput id="pw" minLength={8} required value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
         <Button type="submit" className="w-full" disabled={busy || !ready}>
           {busy && <Loader2 className="animate-spin" />} Update password

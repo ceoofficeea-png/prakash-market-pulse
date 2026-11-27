@@ -6,14 +6,15 @@ import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import heroImg from "@/assets/auth-hero.jpg";
-import { LogoMark } from "@/components/app/logo";
+import heroImg from "@/assets/auth-hero.webp";
+import { PasswordInput } from "@/components/app/password-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
+import { signInEmail } from "@/lib/login-identifier";
 
 const searchSchema = z.object({ redirect: z.string().optional() });
 
@@ -22,9 +23,15 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Sign in — Prakash Pump Marketing Command Center" },
-      { name: "description", content: "Sign in to the Prakash Pump marketing operations platform." },
+      {
+        name: "description",
+        content: "Sign in to the Prakash Pump marketing operations platform.",
+      },
       { property: "og:title", content: "Sign in — Prakash Pump Marketing Command Center" },
-      { property: "og:description", content: "Sign in to the Prakash Pump marketing operations platform." },
+      {
+        property: "og:description",
+        content: "Sign in to the Prakash Pump marketing operations platform.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -45,7 +52,10 @@ const safePath = (p?: string) => {
 function GoogleIcon() {
   return (
     <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
-      <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.3-1.6 3.8-5.5 3.8-3.3 0-6-2.7-6-6.1s2.7-6.1 6-6.1c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.8 3.2 14.6 2.2 12 2.2 6.6 2.2 2.2 6.6 2.2 12s4.4 9.8 9.8 9.8c5.7 0 9.4-4 9.4-9.6 0-.6-.1-1.1-.2-1.6H12Z" />
+      <path
+        fill="#EA4335"
+        d="M12 10.2v3.9h5.5c-.2 1.3-1.6 3.8-5.5 3.8-3.3 0-6-2.7-6-6.1s2.7-6.1 6-6.1c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.8 3.2 14.6 2.2 12 2.2 6.6 2.2 2.2 6.6 2.2 12s4.4 9.8 9.8 9.8c5.7 0 9.4-4 9.4-9.6 0-.6-.1-1.1-.2-1.6H12Z"
+      />
     </svg>
   );
 }
@@ -72,7 +82,10 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "signin") {
-        const { error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
+        const { error } = await supabase.auth.signInWithPassword({
+          email: signInEmail(form.email),
+          password: form.password,
+        });
         if (error) throw error;
       } else if (mode === "signup") {
         const { data, error } = await supabase.auth.signUp({
@@ -83,6 +96,12 @@ function AuthPage() {
         if (error) throw error;
         if (!data.session) toast.success("Check your inbox to confirm your email, then sign in.");
       } else {
+        if (!form.email.includes("@")) {
+          toast.error(
+            "Ask an administrator to reset your password — reset links need a work email.",
+          );
+          return;
+        }
         const { error } = await supabase.auth.resetPasswordForEmail(form.email, {
           redirectTo: `${window.location.origin}/reset-password`,
         });
@@ -99,7 +118,9 @@ function AuthPage() {
 
   const oauth = async (provider: "google" | "lovable") => {
     setBusy(true);
-    const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri: window.location.origin + "/auth" });
+    const result = await lovable.auth.signInWithOAuth(provider, {
+      redirect_uri: window.location.origin + "/auth",
+    });
     if (result.error) {
       toast.error(result.error.message ?? "Sign-in failed");
       setBusy(false);
@@ -111,51 +132,80 @@ function AuthPage() {
 
   return (
     <div className="grid min-h-screen bg-background lg:grid-cols-[1.1fr_1fr]">
-      <div className="relative hidden overflow-hidden lg:block">
-        <img src={heroImg} alt="Industrial pumping station" className="absolute inset-0 size-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-background/10" />
-        <div className="absolute inset-x-0 bottom-0 p-10">
-          <div className="eyebrow text-primary">Marketing Command Center</div>
-          <h1 className="mt-2 max-w-lg text-4xl font-semibold leading-tight text-foreground">
-            Every market, campaign and lead — in one place.
-          </h1>
-          <div className="mt-6 grid max-w-lg grid-cols-3 gap-3">
-            {[
-              ["14", "Markets"],
-              ["13", "Modules"],
-              ["4", "Ad platforms"],
-            ].map(([v, l]) => (
-              <div key={l} className="rounded-lg border border-border bg-background/60 p-3 backdrop-blur">
-                <div className="num text-2xl font-semibold text-foreground">{v}</div>
-                <div className="eyebrow">{l}</div>
+      <div className="relative hidden overflow-hidden border-r border-border lg:flex">
+        <div className="grid-bg absolute inset-0" aria-hidden />
+        <div className="relative flex min-h-screen flex-col gap-8 p-10">
+          <div className="flex items-center gap-3 self-start">
+            <img src="/prakash-logo.svg" alt="Prakash Pump" className="h-11 w-auto" />
+            <div className="border-l border-border pl-3">
+              <div className="text-sm font-semibold tracking-[0.08em] text-foreground">
+                PRAKASH PUMP
               </div>
-            ))}
+              <div className="eyebrow">Marketing Command Center</div>
+            </div>
+          </div>
+          <div className="flex min-h-0 flex-1 items-center">
+            <img
+              src={heroImg}
+              alt="Prakash Pump submersible, monoblock and solar pump range"
+              className="mx-auto max-h-[48vh] w-auto rounded-2xl"
+            />
+          </div>
+          <div>
+            <h1 className="max-w-lg text-4xl font-semibold leading-tight text-foreground">
+              Every market, campaign and lead — in one place.
+            </h1>
+            <div className="mt-6 grid max-w-lg grid-cols-3 gap-3">
+              {[
+                ["14", "Markets"],
+                ["13", "Modules"],
+                ["4", "Ad platforms"],
+              ].map(([v, l]) => (
+                <div
+                  key={l}
+                  className="rounded-lg border border-border bg-background/60 p-3 backdrop-blur"
+                >
+                  <div className="num text-2xl font-semibold text-foreground">{v}</div>
+                  <div className="eyebrow">{l}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
       <div className="flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm">
-          <div className="mb-8 flex items-center gap-3">
-            <LogoMark className="size-10" />
-            <div>
-              <div className="font-display text-lg font-semibold">Prakash Pump</div>
-              <div className="eyebrow">Marketing Command Center</div>
-            </div>
+          <div className="mb-8 flex items-center gap-2.5 lg:hidden">
+            <img src="/prakash-logo.svg" alt="Prakash Pump" className="h-9 w-auto" />
+            <span className="text-sm font-semibold tracking-[0.08em]">PRAKASH PUMP</span>
           </div>
 
           {mode === "forgot" ? (
             <form onSubmit={onSubmit} className="space-y-4">
               <h2 className="text-xl font-semibold">Reset your password</h2>
-              <p className="text-sm text-muted-foreground">We'll email you a secure link to set a new password.</p>
+              <p className="text-sm text-muted-foreground">
+                We'll email you a secure link to set a new password.
+              </p>
               <div className="space-y-1.5">
                 <Label htmlFor="email">Work email</Label>
-                <Input id="email" type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                <Input
+                  id="email"
+                  type="text"
+                  required
+                  placeholder="work email"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                />
               </div>
               <Button type="submit" className="w-full" disabled={busy}>
                 {busy && <Loader2 className="animate-spin" />} Send reset link
               </Button>
-              <button type="button" className="text-sm text-muted-foreground hover:text-foreground" onClick={() => setMode("signin")}>
+              <button
+                type="button"
+                className="text-sm text-muted-foreground hover:text-foreground"
+                onClick={() => setMode("signin")}
+              >
                 ← Back to sign in
               </button>
             </form>
@@ -167,39 +217,67 @@ function AuthPage() {
               </TabsList>
 
               <div className="space-y-2">
-                <Button type="button" variant="outline" className="w-full" onClick={() => oauth("google")} disabled={busy}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => oauth("google")}
+                  disabled={busy}
+                >
                   <GoogleIcon /> Continue with Google
                 </Button>
-                <button type="button" className="lovable-auth-button w-full" onClick={() => oauth("lovable")} disabled={busy}>
+                <button
+                  type="button"
+                  className="lovable-auth-button w-full"
+                  onClick={() => oauth("lovable")}
+                  disabled={busy}
+                >
                   Continue with Lovable
                 </button>
               </div>
 
               <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
-                <span className="h-px flex-1 bg-border" /> or with email <span className="h-px flex-1 bg-border" />
+                <span className="h-px flex-1 bg-border" /> or with your account{" "}
+                <span className="h-px flex-1 bg-border" />
               </div>
 
               <form onSubmit={onSubmit} className="space-y-4">
                 <TabsContent value="signup" className="m-0 space-y-1.5">
                   <Label htmlFor="name">Full name</Label>
-                  <Input id="name" required={mode === "signup"} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                  <Input
+                    id="name"
+                    required={mode === "signup"}
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  />
                 </TabsContent>
                 <div className="space-y-1.5">
                   <Label htmlFor="email">Work email</Label>
-                  <Input id="email" type="email" autoComplete="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                  <Input
+                    id="email"
+                    type="text"
+                    autoComplete="username"
+                    required
+                    placeholder="username or work email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">Password</Label>
                     {mode === "signin" && (
-                      <button type="button" className="text-xs text-muted-foreground hover:text-primary" onClick={() => setMode("forgot")}>
+                      <button
+                        type="button"
+                        className="text-xs text-muted-foreground hover:text-primary"
+                        onClick={() => setMode("forgot")}
+                      >
                         Forgot password?
                       </button>
                     )}
                   </div>
-                  <Input
+                  <PasswordInput
                     id="password"
-                    type="password"
                     minLength={8}
                     autoComplete={mode === "signin" ? "current-password" : "new-password"}
                     required
@@ -213,7 +291,8 @@ function AuthPage() {
                 </Button>
               </form>
               <p className="mt-6 text-xs text-muted-foreground">
-                The first account created becomes the administrator. New team members start with view-only access until an administrator assigns a role.
+                The first account created becomes the administrator. New team members start with
+                view-only access until an administrator assigns a role.
               </p>
             </Tabs>
           )}

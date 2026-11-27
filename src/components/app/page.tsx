@@ -61,13 +61,13 @@ export function LoadingBlock({ className }: { className?: string }) {
   return <Skeleton className={cn("h-64 w-full rounded-xl bg-surface-2", className)} />;
 }
 
-export function NoAccess({ what = "this area" }: { what?: string }) {
+export function NoAccess({ what = "this area", detail }: { what?: string; detail?: string | undefined }) {
   return (
     <div className="panel mx-auto mt-16 max-w-md p-8 text-center">
       <Lock className="mx-auto size-8 text-primary" />
       <h2 className="mt-3 text-lg font-semibold">Restricted</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Your role does not include access to {what}. Ask an administrator to update your role.
+        {detail ?? `Your role does not include access to ${what}. Ask an administrator to update your role.`}
       </p>
     </div>
   );

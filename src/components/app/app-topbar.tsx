@@ -20,7 +20,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser, useLookups } from "@/lib/api";
 import { initials } from "@/lib/format";
-import { roleLabel } from "@/lib/permissions";
+import { allowedModules, roleLabel } from "@/lib/permissions";
 
 export function AppTopbar() {
   const me = useCurrentUser();
@@ -48,6 +48,8 @@ export function AppTopbar() {
   };
 
   const name = me.data?.profile?.full_name || me.data?.email || "";
+  const visible = allowedModules(me.data?.modules ?? null, me.data?.role ?? "viewer");
+  const navItems = NAV.flatMap((g) => g.items).filter((i) => visible.includes(i.module));
   const go = (fn: () => void) => {
     setOpen(false);
     fn();
@@ -103,7 +105,7 @@ export function AppTopbar() {
         <CommandList>
           <CommandEmpty>Nothing found.</CommandEmpty>
           <CommandGroup heading="Modules">
-            {NAV.flatMap((g) => g.items).map((i) => (
+            {navItems.map((i) => (
               <CommandItem key={i.url} onSelect={() => go(() => navigate({ to: i.url }))}>
                 <i.icon /> {i.title}
               </CommandItem>

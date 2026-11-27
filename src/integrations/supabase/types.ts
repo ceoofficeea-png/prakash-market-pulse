@@ -668,24 +668,29 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          contact_email: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
           job_title: string | null
           updated_at: string
+          username: string | null
         }
         Insert: {
           avatar_url?: string | null
+          contact_email?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id: string
           job_title?: string | null
           updated_at?: string
+          username?: string | null
         }
         Update: {
           avatar_url?: string | null
+          contact_email?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
@@ -805,30 +810,54 @@ export type Database = {
       social_account_daily: {
         Row: {
           account_id: number
+          clicks: number
+          comments: number
           date: string
           engagements: number
           followers: number
           id: number
           impressions: number
+          likes: number
           new_followers: number
+          reach: number
+          saves: number
+          shares: number
+          story_views: number
+          video_views: number
         }
         Insert: {
           account_id: number
+          clicks?: number
+          comments?: number
           date: string
           engagements?: number
           followers?: number
           id?: number
           impressions?: number
+          likes?: number
           new_followers?: number
+          reach?: number
+          saves?: number
+          shares?: number
+          story_views?: number
+          video_views?: number
         }
         Update: {
           account_id?: number
+          clicks?: number
+          comments?: number
           date?: string
           engagements?: number
           followers?: number
           id?: number
           impressions?: number
+          likes?: number
           new_followers?: number
+          reach?: number
+          saves?: number
+          shares?: number
+          story_views?: number
+          video_views?: number
         }
         Relationships: [
           {
@@ -902,9 +931,11 @@ export type Database = {
           platform: string
           published_at: string
           reach: number
+          saves: number
           sentiment: string
           shares: number
           status: string
+          story_views: number
           video_views: number
         }
         Insert: {
@@ -923,9 +954,11 @@ export type Database = {
           platform: string
           published_at: string
           reach?: number
+          saves?: number
           sentiment?: string
           shares?: number
           status?: string
+          story_views?: number
           video_views?: number
         }
         Update: {
@@ -944,9 +977,11 @@ export type Database = {
           platform?: string
           published_at?: string
           reach?: number
+          saves?: number
           sentiment?: string
           shares?: number
           status?: string
+          story_views?: number
           video_views?: number
         }
         Relationships: [
@@ -992,6 +1027,7 @@ export type Database = {
           status: string
           team: string
           title: string
+          user_id: string | null
         }
         Insert: {
           capacity_hours?: number
@@ -1004,6 +1040,7 @@ export type Database = {
           status?: string
           team: string
           title: string
+          user_id?: string | null
         }
         Update: {
           capacity_hours?: number
@@ -1016,6 +1053,7 @@ export type Database = {
           status?: string
           team?: string
           title?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -1081,6 +1119,47 @@ export type Database = {
           },
         ]
       }
+      team_task_updates: {
+        Row: {
+          author_id: string | null
+          author_name: string | null
+          created_at: string
+          id: number
+          note: string | null
+          progress_pct: number | null
+          status: string | null
+          task_id: number
+        }
+        Insert: {
+          author_id?: string | null
+          author_name?: string | null
+          created_at?: string
+          id?: number
+          note?: string | null
+          progress_pct?: number | null
+          status?: string | null
+          task_id: number
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string | null
+          created_at?: string
+          id?: number
+          note?: string | null
+          progress_pct?: number | null
+          status?: string | null
+          task_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_task_updates_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "team_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_tasks: {
         Row: {
           campaign_id: number | null
@@ -1090,8 +1169,12 @@ export type Database = {
           id: number
           member_id: number
           priority: string
+          progress_note: string | null
+          progress_pct: number
           status: string
           title: string
+          updated_at: string
+          updated_by: string | null
         }
         Insert: {
           campaign_id?: number | null
@@ -1101,8 +1184,12 @@ export type Database = {
           id?: number
           member_id: number
           priority?: string
+          progress_note?: string | null
+          progress_pct?: number
           status?: string
           title: string
+          updated_at?: string
+          updated_by?: string | null
         }
         Update: {
           campaign_id?: number | null
@@ -1112,8 +1199,12 @@ export type Database = {
           id?: number
           member_id?: number
           priority?: string
+          progress_note?: string | null
+          progress_pct?: number
           status?: string
           title?: string
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: [
           {
@@ -1296,11 +1387,19 @@ export type Database = {
           p_to: string
         }
         Returns: {
+          clicks: number
+          comments: number
           engagements: number
           followers: number
           impressions: number
           key: string
+          likes: number
           new_followers: number
+          reach: number
+          saves: number
+          shares: number
+          story_views: number
+          video_views: number
         }[]
       }
       web_breakdown: {

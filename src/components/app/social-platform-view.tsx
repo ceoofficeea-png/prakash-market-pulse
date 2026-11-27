@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { ChartCard, DonutChart, LinesChart } from "@/components/app/charts";
 import { DataTable, type Column } from "@/components/app/data-table";
 import { KpiCard } from "@/components/app/kpi-card";
-import { KpiGrid } from "@/components/app/page";
+import { KpiGrid, LoadingBlock } from "@/components/app/page";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -14,31 +14,44 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useLookups } from "@/lib/api";
+import { useLookups, useSocialAccounts } from "@/lib/api";
 import { useFilters } from "@/lib/filters";
 import { fmtCompact, fmtPct, fmtShortDate, pctChange } from "@/lib/format";
+import { previousRange } from "@/lib/periods";
 import {
-  accountById,
-  accountSnapshots,
-  accountsForPlatform,
-  PLATFORM_META,
-  PLATFORM_ORDER,
-  postsInRange,
+  accountMap,
   summarise,
   topPosts,
-  trendByPlatform,
+  useSocialPosts,
+  useSocialSnapshots,
+  useSocialTrend,
   type AccountSnapshot,
-  type DemoPost,
-  type PlatformId,
-} from "@/lib/social-platforms";
-import { previousRange } from "@/lib/periods";
+  type SocialPostRow,
+} from "@/lib/social-data";
+import { PLATFORM_META, PLATFORM_ORDER, type PlatformId } from "@/lib/social-platforms";
 
-const openPost = (navigate: ReturnType<typeof useNavigate>, post: DemoPost) =>
+const openPost = (navigate: ReturnType<typeof useNavigate>, post: SocialPostRow) =>
   navigate({ to: "/social/$postId", params: { postId: post.id } });
+
+const marketName = (
+  country: (code?: string | null) => { name: string } | undefined,
+  code: string,
+) => country(code)?.name ?? (code || "Global");
+
+/* Shared states --------------------------------------------------------- */
+
+function StatePanel({ title, detail }: { title: string; detail: string }) {
+  return (
+    <div className="panel p-8 text-center">
+      <h2 className="text-sm font-semibold">{title}</h2>
+      <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">{detail}</p>
+    </div>
+  );
+}
 
 /* Spotlight card -------------------------------------------------------- */
 
-function PostSpotlightCard({ post }: { post: DemoPost }) {
+function PostSpotlightCard({ post }: { post: SocialPostRow }) {
   const navigate = useNavigate();
   const meta = PLATFORM_META[post.platform];
   return (
@@ -93,44 +106,38 @@ export function OverallView({
   const navigate = useNavigate();
   const [metric, setMetric] = useState<"reach" | "engagements">("reach");
 
-  // One pass over the fixtures per filter change: the totals, the previous
-  // window and the per-platform split are all derived from these account rows.
-  const summary = useMemo(() => {
-    const rows = accountSnapshots(f.from, f.to, f.countries);
-    const prev = previousRange(f.from, f.to);
-    const audience = PLATFORM_ORDER.flatMap((platform) => {
-      const followers = summarise(rows.filter((r) => r.platform === platform)).followers;
-      if (!followers) return [];
-      const meta = PLATFORM_META[platform];
-      return [{ id: platform, name: meta.label, value: followers, color: meta.color }];
-    });
-    return {
-      rows,
-      current: summarise(rows),
-      previous: summarise(accountSnapshots(prev.prevFrom, prev.prevTo, f.countries)),
-      audience,
-    };
-  }, [f.from, f.to, f.countries]);
+  const current = useSocialSnapshots(f.from, f.to, { countries: f.countries });
+  const prev = previousRange(f.from, f.to);
+  const previous = useSocialSnapshots(prev.prevFrom, prev.prevTo, { countries: f.countries });
+  const posts = useSocialPosts(f.from, f.to, { countries: f.countries });
+  const trend = useSocialTrend(f.from, f.to, f.countries, metric);
 
-  const posts = useMemo(() => postsInRange(f.from, f.to, f.countries), [f.from, f.to, f.countries]);
-  const trend = useMemo(
-    () => trendByPlatform(f.from, f.to, f.countries, metric),
-    [f.from, f.to, f.countries, metric],
+  const rows = current.rows;
+  const c = useMemo(() => summarise(rows), [rows]);
+  const p = useMemo(() => summarise(previous.rows), [previous.rows]);
+
+  const audience = useMemo(
+    () =>
+      PLATFORM_ORDER.flatMap((platform) => {
+        const followers = rows.reduce(
+          (total, row) => (row.platform === platform ? total + row.followers : total),
+          0,
+        );
+        if (!followers) return [];
+        const meta = PLATFORM_META[platform];
+        return [{ id: platform, name: meta.label, value: followers, color: meta.color }];
+      }),
+    [rows],
   );
-  const spotlight = useMemo(() => topPosts(posts, 5), [posts]);
 
-  const { current: c, previous: p } = summary;
+  const spotlight = useMemo(() => topPosts(posts.rows, 5), [posts.rows]);
 
   const accountRows = useMemo(
-    () =>
-      summary.rows.map((row) => ({
-        ...row,
-        market: country(row.countryCode)?.name ?? row.countryCode,
-      })),
-    [summary.rows, country],
+    () => rows.map((row) => ({ ...row, market: marketName(country, row.countryCode) })),
+    [rows, country],
   );
 
-  const accountColumns: Column<(typeof accountRows)[number]>[] = useMemo(
+  const accountColumns = useMemo<Column<(typeof accountRows)[number]>[]>(
     () => [
       {
         key: "platform",
@@ -203,6 +210,26 @@ export function OverallView({
     [],
   );
 
+  if (current.error) {
+    return (
+      <StatePanel
+        title="Social data could not be loaded"
+        detail={current.error}
+      />
+    );
+  }
+
+  if (current.isLoading && !rows.length) return <LoadingBlock />;
+
+  if (!rows.length) {
+    return (
+      <StatePanel
+        title="No social accounts in this selection"
+        detail="No daily rows exist for this date range and market. Widen the range or load the accounts' daily metrics."
+      />
+    );
+  }
+
   return (
     <div className="space-y-4">
       <KpiGrid cols={5}>
@@ -244,7 +271,7 @@ export function OverallView({
       <div className="grid gap-4 xl:grid-cols-3">
         <ChartCard title="Audience distribution" subtitle="Followers by platform">
           <DonutChart
-            data={summary.audience}
+            data={audience}
             height={180}
             onSliceClick={(slice) => slice.id && onSelectPlatform(slice.id as PlatformId)}
           />
@@ -266,7 +293,7 @@ export function OverallView({
           }
         >
           <LinesChart
-            data={trend}
+            data={trend.data}
             series={PLATFORM_ORDER.map((id) => ({
               key: id,
               label: PLATFORM_META[id].label,
@@ -333,48 +360,56 @@ export function PlatformView({ platform }: { platform: PlatformId }) {
   const meta = PLATFORM_META[platform];
   const [accountId, setAccountId] = useState("all");
 
+  const accountsQuery = useSocialAccounts();
   const accounts = useMemo(
     () =>
-      accountsForPlatform(platform).filter(
-        (a) => !f.countries.length || f.countries.includes(a.countryCode),
+      (accountsQuery.data ?? []).filter(
+        (account) =>
+          account.platform === platform &&
+          (!f.countries.length ||
+            (account.country_code !== null && f.countries.includes(account.country_code))),
       ),
-    [platform, f.countries],
+    [accountsQuery.data, platform, f.countries],
   );
   const selected =
-    accountId !== "all" && accounts.some((a) => a.id === accountId) ? accountId : "all";
+    accountId !== "all" && accounts.some((a) => String(a.id) === accountId) ? accountId : "all";
 
-  // Current and previous windows are computed once per filter/account change.
-  const { current, previous, rows } = useMemo(() => {
-    const prev = previousRange(f.from, f.to);
-    const nowRows = accountSnapshots(f.from, f.to, f.countries, platform);
-    const prevRows = accountSnapshots(prev.prevFrom, prev.prevTo, f.countries, platform);
-    const pickRows = (list: AccountSnapshot[]) =>
-      selected === "all" ? list : list.filter((r) => r.id === selected);
-    const currentRows = pickRows(nowRows);
-    return {
-      current: summarise(currentRows),
-      previous: summarise(pickRows(prevRows)),
-      rows: currentRows,
-    };
-  }, [f.from, f.to, f.countries, platform, selected]);
+  const current = useSocialSnapshots(f.from, f.to, { countries: f.countries, platform });
+  const prev = previousRange(f.from, f.to);
+  const previous = useSocialSnapshots(prev.prevFrom, prev.prevTo, {
+    countries: f.countries,
+    platform,
+  });
+  const posts = useSocialPosts(f.from, f.to, { countries: f.countries, platform });
 
-  const posts = useMemo(() => {
-    const all = postsInRange(f.from, f.to, f.countries, platform);
-    return selected === "all" ? all : all.filter((p) => p.accountId === selected);
-  }, [f.from, f.to, f.countries, platform, selected]);
-  const publishedCount = useMemo(
-    () => posts.filter((p) => p.status === "Published").length,
-    [posts],
+  const pickRows = useMemo(
+    () => (list: AccountSnapshot[]) =>
+      selected === "all" ? list : list.filter((row) => row.id === selected),
+    [selected],
   );
 
-  const spotlight = useMemo(() => topPosts(posts, 4), [posts]);
+  const rows = useMemo(() => pickRows(current.rows), [pickRows, current.rows]);
+  const c = useMemo(() => summarise(rows), [rows]);
+  const p = useMemo(() => summarise(pickRows(previous.rows)), [pickRows, previous.rows]);
 
-  const shareLabel = meta.chips.find((c) => c.key === "shares")?.label ?? "Shares";
-  const commentLabel = meta.chips.find((c) => c.key === "comments")?.label ?? "Comments";
+  const accountById = useMemo(() => accountMap(accountsQuery.data), [accountsQuery.data]);
+
+  const platformPosts = useMemo(
+    () =>
+      selected === "all" ? posts.rows : posts.rows.filter((post) => post.accountId === selected),
+    [posts.rows, selected],
+  );
+  const publishedCount = useMemo(
+    () => platformPosts.filter((post) => post.status === "Published").length,
+    [platformPosts],
+  );
+  const spotlight = useMemo(() => topPosts(platformPosts, 4), [platformPosts]);
+
+  const shareLabel = meta.chips.find((chip) => chip.key === "shares")?.label ?? "Shares";
+  const commentLabel = meta.chips.find((chip) => chip.key === "comments")?.label ?? "Comments";
 
   const breakdownRows = useMemo(
-    () =>
-      rows.map((row) => ({ ...row, market: country(row.countryCode)?.name ?? row.countryCode })),
+    () => rows.map((row) => ({ ...row, market: marketName(country, row.countryCode) })),
     [rows, country],
   );
 
@@ -443,7 +478,7 @@ export function PlatformView({ platform }: { platform: PlatformId }) {
     [commentLabel, shareLabel],
   );
 
-  const postColumns = useMemo<Column<DemoPost>[]>(
+  const postColumns = useMemo<Column<SocialPostRow>[]>(
     () => [
       {
         key: "content",
@@ -451,7 +486,9 @@ export function PlatformView({ platform }: { platform: PlatformId }) {
         cell: (p) => (
           <div className="max-w-sm min-w-0">
             <div className="line-clamp-2">{p.content.split("\n")[0]}</div>
-            <div className="text-xs text-muted-foreground">{accountById(p.accountId)?.name}</div>
+            <div className="text-xs text-muted-foreground">
+              {accountById.get(p.accountId)?.name}
+            </div>
           </div>
         ),
       },
@@ -518,11 +555,26 @@ export function PlatformView({ platform }: { platform: PlatformId }) {
         key: "open",
         header: "",
         sortable: false,
-        cell: (p) => <ArrowUpRight className="size-3.5 text-muted-foreground" />,
+        cell: () => <ArrowUpRight className="size-3.5 text-muted-foreground" />,
       },
     ],
-    [commentLabel, shareLabel],
+    [accountById, commentLabel, shareLabel],
   );
+
+  if (current.error) {
+    return <StatePanel title="Social data could not be loaded" detail={current.error} />;
+  }
+
+  if (current.isLoading && !rows.length) return <LoadingBlock />;
+
+  if (!rows.length) {
+    return (
+      <StatePanel
+        title={`No ${meta.label} data in this selection`}
+        detail={`No ${meta.label} account has daily rows for this date range and market. Widen the range or check the account's country.`}
+      />
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -532,8 +584,8 @@ export function PlatformView({ platform }: { platform: PlatformId }) {
           <div>
             <h2 className="text-base font-semibold">{meta.label} accounts</h2>
             <p className="text-xs text-muted-foreground">
-              {accounts.length} connected accounts · {fmtCompact(current.followers)} followers ·{" "}
-              {fmtPct(current.growthPct, 2)} growth
+              {accounts.length} connected accounts · {fmtCompact(c.followers)} followers ·{" "}
+              {fmtPct(c.growthPct, 2)} growth
             </p>
           </div>
         </div>
@@ -544,7 +596,7 @@ export function PlatformView({ platform }: { platform: PlatformId }) {
           <SelectContent>
             <SelectItem value="all">All {meta.label} accounts</SelectItem>
             {accounts.map((a) => (
-              <SelectItem key={a.id} value={a.id}>
+              <SelectItem key={a.id} value={String(a.id)}>
                 {a.name} · {a.handle}
               </SelectItem>
             ))}
@@ -555,34 +607,34 @@ export function PlatformView({ platform }: { platform: PlatformId }) {
       <KpiGrid cols={4}>
         <KpiCard
           label="Followers"
-          value={fmtCompact(current.followers)}
+          value={fmtCompact(c.followers)}
           icon={Users}
-          delta={pctChange(current.newFollowers, previous.newFollowers)}
-          hint={`${fmtCompact(current.newFollowers)} net new`}
+          delta={pctChange(c.newFollowers, p.newFollowers)}
+          hint={`${fmtCompact(c.newFollowers)} net new`}
         />
         <KpiCard
           label="Reach"
-          value={fmtCompact(current.reach)}
+          value={fmtCompact(c.reach)}
           icon={Eye}
-          delta={pctChange(current.reach, previous.reach)}
+          delta={pctChange(c.reach, p.reach)}
         />
         <KpiCard
           label="Impressions"
-          value={fmtCompact(current.impressions)}
-          delta={pctChange(current.impressions, previous.impressions)}
+          value={fmtCompact(c.impressions)}
+          delta={pctChange(c.impressions, p.impressions)}
         />
         <KpiCard
           label="Engagements"
-          value={fmtCompact(current.engagements)}
+          value={fmtCompact(c.engagements)}
           icon={MousePointerClick}
-          delta={pctChange(current.engagements, previous.engagements)}
+          delta={pctChange(c.engagements, p.engagements)}
           color={meta.color}
         />
       </KpiGrid>
 
       <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
         {meta.chips.map((chip) => (
-          <MetricChip key={chip.key} label={chip.label} value={current[chip.key]} />
+          <MetricChip key={chip.key} label={chip.label} value={c[chip.key]} />
         ))}
       </div>
 
@@ -629,15 +681,19 @@ export function PlatformView({ platform }: { platform: PlatformId }) {
         <div className="mb-2 flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold">Post history</h2>
           <span className="text-xs text-muted-foreground">
-            {publishedCount} published · {posts.length - publishedCount} scheduled
+            {publishedCount} published · {platformPosts.length - publishedCount} scheduled
           </span>
         </div>
         <DataTable
-          rows={posts}
+          rows={platformPosts}
           columns={postColumns}
           rowKey={(p) => p.id}
           onRowClick={(p) => openPost(navigate, p)}
-          searchKeys={[(p) => p.content, (p) => p.format, (p) => accountById(p.accountId)?.name]}
+          searchKeys={[
+            (p) => p.content,
+            (p) => p.format,
+            (p) => accountById.get(p.accountId)?.name,
+          ]}
           searchPlaceholder="Search posts or formats…"
           exportName={`${platform}-posts`}
           initialSort={{ key: "publishedAt", dir: "desc" }}

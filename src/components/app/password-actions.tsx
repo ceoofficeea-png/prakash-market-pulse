@@ -1,8 +1,9 @@
 import { useServerFn } from "@tanstack/react-start";
-import { Eye, EyeOff, KeyRound, ShieldCheck } from "lucide-react";
+import { KeyRound, ShieldCheck } from "lucide-react";
 import { useId, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
+import { PasswordInput } from "@/components/app/password-input";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,7 +14,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { updateTeamUserPassword } from "@/lib/admin-users.functions";
@@ -29,7 +29,6 @@ function PasswordForm({
 }) {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
   const id = useId();
   const passwordId = `${id}-password`;
@@ -59,27 +58,15 @@ function PasswordForm({
     <form onSubmit={submit} className="space-y-3">
       <div className="space-y-1.5">
         <Label htmlFor={passwordId}>New password</Label>
-        <div className="relative">
-          <Input
-            id={passwordId}
-            type={show ? "text" : "password"}
-            autoComplete="new-password"
-            minLength={MIN_PASSWORD_LENGTH}
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="pr-9"
-            aria-describedby={hintId}
-          />
-          <button
-            type="button"
-            onClick={() => setShow((s) => !s)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            aria-label={show ? "Hide password" : "Show password"}
-          >
-            {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-          </button>
-        </div>
+        <PasswordInput
+          id={passwordId}
+          autoComplete="new-password"
+          minLength={MIN_PASSWORD_LENGTH}
+          required
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          aria-describedby={hintId}
+        />
         <p
           id={hintId}
           className={tooShort ? "text-xs text-destructive" : "text-xs text-muted-foreground"}
@@ -89,9 +76,8 @@ function PasswordForm({
       </div>
       <div className="space-y-1.5">
         <Label htmlFor={confirmId}>Confirm password</Label>
-        <Input
+        <PasswordInput
           id={confirmId}
-          type={show ? "text" : "password"}
           autoComplete="new-password"
           required
           value={confirm}

@@ -1,12 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo } from "react";
 
 import { BarsChart, ChartCard } from "@/components/app/charts";
-import { DemoNote, DetailStat, PageHeader } from "@/components/app/page";
+import { DetailStat, LoadingBlock, PageHeader } from "@/components/app/page";
 import { StatusBadge } from "@/components/app/status-badge";
 import { Badge } from "@/components/ui/badge";
-import { useLookups } from "@/lib/api";
+import { useLookups, useSocialAccounts } from "@/lib/api";
 import { fmtCompact, fmtDateTime, fmtNum, fmtPct, safeDiv } from "@/lib/format";
-import { accountById, DEMO_POSTS, PLATFORM_META } from "@/lib/social-platforms";
+import { useSocialPostDetail } from "@/lib/social-data";
+import { PLATFORM_META } from "@/lib/social-platforms";
 
 export const Route = createFileRoute("/_authenticated/social/$postId")({
   head: () => ({
@@ -31,7 +33,17 @@ export const Route = createFileRoute("/_authenticated/social/$postId")({
 function PostDetail() {
   const { postId } = Route.useParams();
   const { country } = useLookups();
-  const post = DEMO_POSTS.find((p) => p.id === postId);
+  const accounts = useSocialAccounts();
+  const detail = useSocialPostDetail(postId);
+
+  const post = detail.data?.post ?? null;
+  const peers = detail.data?.peers ?? [];
+  const account = useMemo(
+    () => (accounts.data ?? []).find((a) => String(a.id) === post?.accountId),
+    [accounts.data, post?.accountId],
+  );
+
+  if (detail.isLoading) return <LoadingBlock className="mt-10" />;
 
   if (!post) {
     return (
@@ -45,10 +57,6 @@ function PostDetail() {
   }
 
   const meta = PLATFORM_META[post.platform];
-  const account = accountById(post.accountId);
-  const peers = DEMO_POSTS.filter(
-    (p) => p.accountId === post.accountId && p.status === "Published" && p.id !== post.id,
-  );
   const average = (key: "impressions" | "engagements") =>
     peers.length ? peers.reduce((n, p) => n + p[key], 0) / peers.length : 0;
   const extraChips = meta.chips.filter((chip) => chip.key !== "videoViews" || post.videoViews > 0);
@@ -89,7 +97,9 @@ function PostDetail() {
             {[
               [
                 "Market",
-                country(account?.countryCode ?? "")?.name ?? account?.countryCode ?? "Global",
+                country(account?.country_code ?? "")?.name ??
+                  account?.country_code ??
+                  "Global",
               ],
               ["Account followers", fmtCompact(account?.followers ?? 0)],
               ["Format", post.format],
@@ -150,7 +160,6 @@ function PostDetail() {
           />
         </ChartCard>
       )}
-      <DemoNote />
     </>
   );
 }

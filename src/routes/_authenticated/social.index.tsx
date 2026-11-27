@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
-import { DemoNote, PageHeader } from "@/components/app/page";
+import { PageHeader } from "@/components/app/page";
 import { OverallView, PlatformView } from "@/components/app/social-platform-view";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PLATFORM_META, PLATFORM_ORDER, type PlatformId } from "@/lib/social-platforms";
@@ -64,8 +64,6 @@ function SocialPage() {
           </TabsContent>
         ))}
       </Tabs>
-
-      <DemoNote />
     </>
   );
 }

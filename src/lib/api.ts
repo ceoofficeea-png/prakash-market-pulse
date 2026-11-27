@@ -44,12 +44,17 @@ export function useCurrentUser() {
         supabase.from("user_roles").select("role").eq("user_id", user.id),
       ]);
       const roleList = (roles.data ?? []).map((r) => r.role as AppRole);
+      const modules = Array.isArray(user.app_metadata?.["modules"])
+        ? (user.app_metadata["modules"] as string[])
+        : null;
       return {
         id: user.id,
         email: user.email ?? "",
         profile: profile.data,
         roles: roleList,
         role: primaryRole(roleList),
+        /** null = no restriction saved, so every module stays visible. */
+        modules,
       };
     },
   });
