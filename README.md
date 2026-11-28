@@ -45,8 +45,24 @@ Fill `.env` from **Supabase → Project Settings → API**:
 Migrations live in `drizzle/migrations/` and must be applied **in order**, once, to the
 project's database. Either:
 
-- **SQL editor:** paste and run `0000` … `0014` in filename order, or
+- **SQL editor:** paste and run `0000` … `0017` in filename order, or
 - **CLI:** set `LOVABLE_DB_MIGRATION_URL` and run `bun x drizzle-kit push`.
+
+If you would rather paste one file, run **`prakash_market_pulse_complete_migration.sql`**
+(repository root, an exact copy of `drizzle/apply_all.sql`) instead: it contains
+`0000` … `0017` in order, is safe to re-run (the enum, tables, columns, indexes, triggers and
+policies are created only when missing) and only loads the demo seed when `public.countries` is
+empty. The per-file migrations below stay the source of truth for review.
+
+If the database already holds rows, run **`drizzle/preflight_checks.sql`** first. It is read-only,
+returns one row per check (`BLOCKS`, `WARN`, `OK` or `SKIP`), and lists the duplicate rows and
+out-of-range values that would make `apply_all.sql` fail when it creates the unique indexes and
+check constraints, with a one-line repair for each finding.
+
+If that run prints `NOTICE: Reference data already present - skipping demo seed.` and you
+still want the demo dataset, run **`drizzle/seed_only.sql`**: it empties the seeded tables and
+rebuilds them, including the post-seed fixes from `0011`, `0013` and `0014`. Sign-ins, profiles
+and roles are untouched. Only use it on a database whose demo rows you are happy to replace.
 
 | File          | What it adds                                                                      |
 | ------------- | --------------------------------------------------------------------------------- |
@@ -57,9 +73,33 @@ project's database. Either:
 | `0012`        | Unique usernames (`profiles.username`), optional `profiles.contact_email`         |
 | `0013`        | `team_members.user_id`, task progress columns, `team_task_updates` history + RLS  |
 | `0014`        | Task completion approvals (`approval_status`), direct-manager decision policy    |
+| `0016`        | Team delete: `team_members` foreign keys get `on delete set null`/`cascade`       |
+| `0017`        | Forward-only campaign statuses, `campaign_status_history` audit + guard trigger   |
+| `0018`        | Employee ID, department, designation and account status on `profiles`             |
 
 `0012`–`0014` are required for username sign-in, employee task updates and the approval section
 in _My Workspace_. Until they run, the app still loads and those areas fail with a clear error.
+
+`0016` is what makes **Remove member** work. Every foreign key pointing at `team_members` was
+created without an `ON DELETE` action, so deleting a teammate failed as soon as anything still
+referenced them (their manager link, a campaign, a lead, a report). It rebuilds those keys
+(`cascade` for their own tasks and KPI rows, `set null` for everything else) and is safe to re-run.
+
+`0017` makes campaign statuses forward-only: **Planned → Active → Pause → Completed**, one step at
+a time. A `before insert or update` trigger rejects every other change (including
+the legacy `Paused` label, `Completed → anything`, and any skip), so the rule also holds for direct
+API calls and SQL, not just the button in the UI. Each accepted change is appended to
+`public.campaign_status_history` (previous status, new status, who, when); the table is read-only
+for signed-in users. Existing `Paused` rows are converted to `Pause`.
+
+`0018` puts the employee record on `public.profiles`: `employee_id` (unique when set, compared
+case-insensitively), `department`, `designation` and `account_status`
+(`Active` / `Pending` / `Disabled`). _Administration → Users & roles_ edits them inline, offers
+**Deactivate** (bans the sign-in and sets `Disabled`, keeping every task and record) and
+**Delete** (removes the sign-in and profile; the roster row is kept but unlinked, so tasks,
+  campaigns, leads and reports stay attached to that roster record). Both run through admin-only
+  server functions; neither is offered on your own row and the last administrator cannot be
+  deleted.
 
 `0011` is safe to re-run and doubles as a repair: if it was never applied, the social
 Likes/Comments/Shares chips read zero and the Reach-by-platform chart is empty. Re-run it, then

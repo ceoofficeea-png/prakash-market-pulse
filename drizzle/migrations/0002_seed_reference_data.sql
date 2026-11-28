@@ -89,7 +89,7 @@ insert into public.campaigns (id,code,name,objective,status,product_id,owner_id,
 (13,'CMP-26-013','IFAT & Water Expo Pre-Event','Event','Completed','IND',9,current_date-40,current_date-10,15000,'{DE,AE}','{linkedin_ads}',150,'Drive booth meetings ahead of IFAT Munich and Water Expo Dubai.'),
 (14,'CMP-26-014','Industrial Motors B2B Webinar Series','Lead Generation','Active','MOT',7,current_date-30,current_date+45,24000,'{IN,AE,DE,US}','{linkedin_ads,youtube_ads}',500,'Monthly technical webinars on IE3/IE4 efficient motors.'),
 (15,'CMP-26-015','Rabi Season Solar Campaign','Lead Generation','Planned','SOL',2,current_date+5,current_date+90,64000,'{IN}','{google_ads,meta_ads,youtube_ads}',5000,'Rabi season follow-on to the PM-KUSUM drive.'),
-(16,'CMP-26-016','Saudi Vision 2030 Infra Partners','Account-Based Marketing','Paused','IND',4,current_date-20,current_date+70,33000,'{SA}','{linkedin_ads}',80,'Paused pending new distributor agreement in Riyadh.');
+(16,'CMP-26-016','Saudi Vision 2030 Infra Partners','Account-Based Marketing','Pause','IND',4,current_date-20,current_date+70,33000,'{SA}','{linkedin_ads}',80,'Paused pending new distributor agreement in Riyadh.');
 select setval(pg_get_serial_sequence('public.campaigns','id'), 16);
 
 -- Daily paid media metrics --------------------------------------------------
@@ -116,7 +116,7 @@ with plat(platform, base_imp, ctr, cpc, cvr) as (values
   join plat p on p.platform = cp.platform
   cross join lateral generate_series(
     greatest(c.start_date, current_date - 179),
-    least(c.end_date, case when c.status = 'Paused' then current_date - 6 else current_date end),
+    least(c.end_date, case when c.status = 'Pause' then current_date - 6 else current_date end),
     interval '1 day') d
 )
 insert into public.channel_daily_metrics (date,campaign_id,country_code,platform,impressions,clicks,spend,conversions,leads,revenue)

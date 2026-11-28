@@ -113,7 +113,7 @@ function CampaignsPage() {
                   <span
                     className={cn(
                       "absolute inset-y-0.5 rounded-sm",
-                      r.status === "Active" ? "bg-signal" : r.status === "Planned" ? "bg-info/70" : r.status === "Paused" ? "bg-warning/70" : "bg-muted-foreground/40",
+                      r.status === "Active" ? "bg-signal" : r.status === "Planned" ? "bg-info/70" : r.status === "Pause" ? "bg-warning/70" : "bg-muted-foreground/40",
                     )}
                     style={{ left: `${left}%`, width: `${Math.max(1, width)}%` }}
                   />

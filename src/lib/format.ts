@@ -120,7 +120,14 @@ export const CONTENT_STAGES = [
   "Published",
   "Archived",
 ] as const;
-export const CAMPAIGN_STATUSES = ["Planned", "Active", "Paused", "Completed"] as const;
+export const CAMPAIGN_STATUSES = ["Planned", "Active", "Pause", "Completed"] as const;
+
+/** Campaign statuses only move forward, one step at a time. */
+export const CAMPAIGN_NEXT_STATUS: Record<string, (typeof CAMPAIGN_STATUSES)[number]> = {
+  Planned: "Active",
+  Active: "Pause",
+  Pause: "Completed",
+};
 export const TASK_STATUSES = ["To Do", "In Progress", "Blocked", "Done"] as const;
 
 export const CHART_COLORS = [

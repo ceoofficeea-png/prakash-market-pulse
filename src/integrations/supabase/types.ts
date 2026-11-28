@@ -113,6 +113,44 @@ export type Database = {
         }
         Relationships: []
       }
+      campaign_status_history: {
+        Row: {
+          campaign_id: number
+          changed_at: string
+          changed_by: string | null
+          changed_by_name: string | null
+          id: number
+          new_status: string
+          previous_status: string | null
+        }
+        Insert: {
+          campaign_id: number
+          changed_at?: string
+          changed_by?: string | null
+          changed_by_name?: string | null
+          id?: number
+          new_status: string
+          previous_status?: string | null
+        }
+        Update: {
+          campaign_id?: number
+          changed_at?: string
+          changed_by?: string | null
+          changed_by_name?: string | null
+          id?: number
+          new_status?: string
+          previous_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_status_history_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           budget: number
@@ -667,10 +705,14 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_status: string
           avatar_url: string | null
           contact_email: string | null
           created_at: string
+          department: string | null
+          designation: string | null
           email: string | null
+          employee_id: string | null
           full_name: string | null
           id: string
           job_title: string | null
@@ -678,10 +720,14 @@ export type Database = {
           username: string | null
         }
         Insert: {
+          account_status?: string
           avatar_url?: string | null
           contact_email?: string | null
           created_at?: string
+          department?: string | null
+          designation?: string | null
           email?: string | null
+          employee_id?: string | null
           full_name?: string | null
           id: string
           job_title?: string | null
@@ -689,10 +735,14 @@ export type Database = {
           username?: string | null
         }
         Update: {
+          account_status?: string
           avatar_url?: string | null
           contact_email?: string | null
           created_at?: string
+          department?: string | null
+          designation?: string | null
           email?: string | null
+          employee_id?: string | null
           full_name?: string | null
           id?: string
           job_title?: string | null

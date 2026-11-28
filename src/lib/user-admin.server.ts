@@ -109,6 +109,88 @@ export async function createLoginUser(input: {
   return { userId, username };
 }
 
+/** Block or restore a sign-in, keeping profiles.account_status in step. */
+export async function setUserActive(userId: string, active: boolean): Promise<void> {
+  const admin = await adminClient();
+
+  // A ban of ~100 years is Supabase's supported way to disable sign-in without
+  // deleting the account; "none" lifts it again.
+  const { error } = await admin.auth.admin.updateUserById(userId, {
+    ban_duration: active ? "none" : "876000h",
+  });
+  if (error) throw new Error(error.message);
+
+  const { error: profileErr } = await admin
+    .from("profiles")
+    .update({ account_status: active ? "Active" : "Disabled" })
+    .eq("id", userId);
+  if (profileErr) throw new Error(profileErr.message);
+}
+
+/** Employee ID, department, designation and account status on the profile. */
+export async function setUserDetails(input: {
+  userId: string;
+  employeeId?: string | undefined;
+  department?: string | undefined;
+  designation?: string | undefined;
+  accountStatus: "Active" | "Pending" | "Disabled";
+}): Promise<void> {
+  const admin = await adminClient();
+  const { data: updated, error } = await admin
+    .from("profiles")
+    .update({
+      employee_id: input.employeeId?.trim() || null,
+      department: input.department?.trim() || null,
+      designation: input.designation?.trim() || null,
+      account_status: input.accountStatus,
+    })
+    .eq("id", input.userId)
+    .select("id");
+
+  if (error) {
+    if (error.code === "23505") {
+      throw new Error("That employee ID is already used by another account.");
+    }
+    throw new Error(error.message);
+  }
+  if (!updated || updated.length === 0) throw new Error("Unknown user");
+
+  // Keep the sign-in ban in step with the status that was just saved, without
+  // clobbering a "Pending" label (setUserActive would rewrite it to Active).
+  const { error: banErr } = await admin.auth.admin.updateUserById(input.userId, {
+    ban_duration: input.accountStatus === "Disabled" ? "876000h" : "none",
+  });
+  if (banErr) throw new Error(banErr.message);
+}
+
+/**
+ * Permanently delete a sign-in. The profile and roles cascade, roster rows are
+ * unlinked (team_members.user_id is set null) and ownership columns are cleared.
+ * The last administrator cannot be removed.
+ */
+export async function deleteUserAccount(userId: string): Promise<void> {
+  const admin = await adminClient();
+
+  const { data: roles, error: rolesErr } = await admin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId);
+  if (rolesErr) throw new Error(rolesErr.message);
+
+  if ((roles ?? []).some((r) => r.role === "admin")) {
+    const { count, error } = await admin
+      .from("user_roles")
+      .select("user_id", { count: "exact", head: true })
+      .eq("role", "admin")
+      .neq("user_id", userId);
+    if (error) throw new Error(error.message);
+    if (!count) throw new Error("The last administrator cannot be deleted.");
+  }
+
+  const { error } = await admin.auth.admin.deleteUser(userId);
+  if (error) throw new Error(error.message);
+}
+
 /** Replace the module list on a user's app metadata (admin-only data). */
 export async function setUserModules(userId: string, modules: string[]): Promise<void> {
   const admin = await adminClient();

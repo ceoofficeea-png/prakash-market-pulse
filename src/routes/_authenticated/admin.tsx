@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Database, Plug, ShieldCheck, Users } from "lucide-react";
@@ -11,6 +12,13 @@ import { ModuleAccessDialog } from "@/components/app/module-access";
 import { KpiGrid, NoAccess, PageHeader } from "@/components/app/page";
 import { ChangeMyPasswordCard, ResetPasswordDialog } from "@/components/app/password-actions";
 import { StatusBadge } from "@/components/app/status-badge";
+import {
+  ACCOUNT_STATUSES,
+  AccountStatusAction,
+  DeleteUserAction,
+  EditUserDetailsDialog,
+  type AccountStatus,
+} from "@/components/app/user-admin-actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -83,13 +91,17 @@ function AdminPage() {
     queryKey: ["admin-users"],
     enabled: isAdmin,
     queryFn: async () => {
-      const [profiles, roles, access] = await Promise.all([
+      const [profiles, roles, access, members, tasks] = await Promise.all([
         supabase.from("profiles").select("*").order("created_at"),
         supabase.from("user_roles").select("user_id, role"),
         listAccess(),
+        supabase.from("team_members").select("id, user_id"),
+        supabase.from("team_tasks").select("member_id"),
       ]);
       if (profiles.error) throw profiles.error;
       if (roles.error) throw roles.error;
+      if (members.error) throw members.error;
+      if (tasks.error) throw tasks.error;
       // Group roles once (O(n + m)) instead of filtering the full role list for every profile.
       const byUser = new Map<string, AppRole[]>();
       for (const row of roles.data ?? []) {
@@ -100,11 +112,19 @@ function AdminPage() {
       // Module access lives on auth app metadata, so it arrives from the server.
       const modulesById = new Map(access.map((a) => [a.id, a.modules]));
       const signInById = new Map(access.map((a) => [a.id, a.lastSignInAt]));
+      // Map roster row -> sign-in, then count assigned tasks per sign-in.
+      const memberUserById = new Map((members.data ?? []).map((m) => [m.id, m.user_id]));
+      const taskCountByUser = new Map<string, number>();
+      for (const t of tasks.data ?? []) {
+        const uid = memberUserById.get(t.member_id);
+        if (uid) taskCountByUser.set(uid, (taskCountByUser.get(uid) ?? 0) + 1);
+      }
       return (profiles.data ?? []).map((u) => ({
         ...u,
         role: primaryRole(byUser.get(u.id) ?? []),
         modules: modulesById.get(u.id) ?? null,
         lastSignInAt: signInById.get(u.id) ?? null,
+        tasks: taskCountByUser.get(u.id) ?? 0,
       }));
     },
   });
@@ -122,6 +142,30 @@ function AdminPage() {
     },
     onError: (e) => toast.error(e.message),
   });
+
+  const [deptFilter, setDeptFilter] = useState("all");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const allUsers = users.data ?? [];
+  const departments = useMemo(
+    () =>
+      Array.from(
+        new Set(allUsers.map((u) => u.department).filter((d): d is string => Boolean(d))),
+      ).sort(),
+    [allUsers],
+  );
+  const filteredUsers = useMemo(
+    () =>
+      allUsers.filter((u) => {
+        if (deptFilter !== "all" && (u.department ?? "") !== deptFilter) return false;
+        if (roleFilter !== "all" && u.role !== roleFilter) return false;
+        if (statusFilter !== "all" && (u.account_status || "Active") !== statusFilter)
+          return false;
+        return true;
+      }),
+    [allUsers, deptFilter, roleFilter, statusFilter],
+  );
 
   if (me.isLoading) return null;
   if (!isAdmin) return <NoAccess what="Administration" />;
@@ -162,11 +206,61 @@ function AdminPage() {
         <TabsContent value="users" className="space-y-4">
           <ChangeMyPasswordCard />
           <DataTable
-            rows={users.data ?? []}
+            rows={filteredUsers}
             rowKey={(r) => r.id}
-            searchKeys={[(r) => r.full_name, (r) => r.email, (r) => r.username ?? ""]}
+            searchKeys={[
+              (r) => r.full_name,
+              (r) => r.email,
+              (r) => r.username ?? "",
+              (r) => r.employee_id ?? "",
+              (r) => r.department ?? "",
+              (r) => r.designation ?? "",
+            ]}
             exportName="users"
-            toolbar={<AddUserDialog />}
+            toolbar={
+              <>
+                <Select value={deptFilter} onValueChange={setDeptFilter}>
+                  <SelectTrigger className="h-8 w-40">
+                    <SelectValue placeholder="Department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All departments</SelectItem>
+                    {departments.map((d) => (
+                      <SelectItem key={d} value={d}>
+                        {d}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={roleFilter} onValueChange={setRoleFilter}>
+                  <SelectTrigger className="h-8 w-36">
+                    <SelectValue placeholder="Role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All roles</SelectItem>
+                    {ROLES.map((r) => (
+                      <SelectItem key={r.id} value={r.id}>
+                        {r.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="h-8 w-36">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All statuses</SelectItem>
+                    {ACCOUNT_STATUSES.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <AddUserDialog />
+              </>
+            }
             columns={[
               {
                 key: "full_name",
@@ -192,6 +286,36 @@ function AdminPage() {
                     </div>
                   </div>
                 ),
+              },
+              {
+                key: "employee_id",
+                header: "Employee ID",
+                cell: (r) => (
+                  <span className="num text-xs">{r.employee_id || "—"}</span>
+                ),
+              },
+              {
+                key: "department",
+                header: "Department / Designation",
+                value: (r) => [r.department, r.designation].filter(Boolean).join(" · "),
+                cell: (r) => (
+                  <div className="text-xs">
+                    <div>{r.department || "—"}</div>
+                    <div className="text-muted-foreground">{r.designation || "—"}</div>
+                  </div>
+                ),
+              },
+              {
+                key: "account_status",
+                header: "Status",
+                cell: (r) => <StatusBadge value={r.account_status || "Active"} />,
+              },
+              {
+                key: "tasks",
+                header: "Tasks",
+                align: "right",
+                value: (r) => r.tasks,
+                cell: (r) => <span className="num text-xs">{r.tasks}</span>,
               },
               {
                 key: "created_at",
@@ -250,11 +374,35 @@ function AdminPage() {
               },
               {
                 key: "actions",
-                header: "Password",
+                header: "Actions",
                 sortable: false,
-                cell: (r) => (
-                  <ResetPasswordDialog userId={r.id} name={r.full_name || r.email || "this user"} />
-                ),
+                cell: (r) => {
+                  const label = r.full_name || r.email || "this user";
+                  const isSelf = r.id === me.data?.id;
+                  return (
+                    <div className="flex items-center justify-end gap-1">
+                      <EditUserDetailsDialog
+                        userId={r.id}
+                        name={label}
+                        employeeId={r.employee_id}
+                        department={r.department}
+                        designation={r.designation}
+                        accountStatus={(r.account_status || "Active") as AccountStatus}
+                      />
+                      <ResetPasswordDialog userId={r.id} name={label} />
+                      {!isSelf && (
+                        <>
+                          <AccountStatusAction
+                            userId={r.id}
+                            name={label}
+                            active={(r.account_status || "Active") !== "Disabled"}
+                          />
+                          <DeleteUserAction userId={r.id} name={label} />
+                        </>
+                      )}
+                    </div>
+                  );
+                },
               },
             ]}
           />
@@ -293,7 +441,9 @@ function AdminPage() {
             people sign up themselves — self sign-ups start as Viewer.{" "}
             <span className="text-foreground">Module access</span> is layered on top of the role: it
             decides which screens a person sees, while the role still decides what they can do
-            there. Administrators always see every module.
+            there. Administrators always see every module. <span className="text-foreground">Deactivate</span> blocks
+            a sign-in immediately and keeps the record; <span className="text-foreground">Delete</span> removes the
+            sign-in and profile for good. Neither is offered on your own row.
           </p>
         </TabsContent>
 

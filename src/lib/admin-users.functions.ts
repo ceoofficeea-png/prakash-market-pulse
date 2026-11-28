@@ -4,7 +4,15 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { USERNAME_PATTERN } from "@/lib/login-identifier";
 import { ALL_MODULE_IDS } from "@/lib/permissions";
-import { createLoginUser, requireRole, setUserModules, setUserRole } from "@/lib/user-admin.server";
+import {
+  createLoginUser,
+  deleteUserAccount,
+  requireRole,
+  setUserActive,
+  setUserDetails,
+  setUserModules,
+  setUserRole,
+} from "@/lib/user-admin.server";
 
 const roleEnum = z.enum(["admin", "manager", "analyst", "viewer"]);
 const moduleEnum = z.enum(ALL_MODULE_IDS as [string, ...string[]]);
@@ -41,6 +49,21 @@ const modulesInput = z.object({
 const passwordInput = z.object({
   userId: z.string().uuid(),
   password: z.string().min(8).max(72),
+});
+
+const userInput = z.object({ userId: z.string().uuid() });
+
+const activeInput = z.object({
+  userId: z.string().uuid(),
+  active: z.boolean(),
+});
+
+const detailsInput = z.object({
+  userId: z.string().uuid(),
+  employeeId: z.string().trim().max(40),
+  department: z.string().trim().max(80),
+  designation: z.string().trim().max(80),
+  accountStatus: z.enum(["Active", "Pending", "Disabled"]),
 });
 
 /** Admin-only: create a confirmed sign-in account with a role and module access. */
@@ -119,6 +142,57 @@ export const updateTeamUserPassword = createServerFn({ method: "POST" })
     });
     if (error) throw new Error(error.message);
 
+    return { userId: data.userId };
+  });
+
+/** Admin-only: employee ID, department, designation and account status. */
+export const updateTeamUserProfile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => detailsInput.parse(data))
+  .handler(async ({ data, context }) => {
+    await requireRole(
+      context.supabase,
+      context.userId,
+      ["admin"],
+      "Only administrators can edit employee records.",
+    );
+    await setUserDetails(data);
+    return { userId: data.userId, accountStatus: data.accountStatus };
+  });
+
+/** Admin-only: deactivate (ban) or reactivate a sign-in. */
+export const setTeamUserActive = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => activeInput.parse(data))
+  .handler(async ({ data, context }) => {
+    await requireRole(
+      context.supabase,
+      context.userId,
+      ["admin"],
+      "Only administrators can change account status.",
+    );
+    if (!data.active && data.userId === context.userId) {
+      throw new Error("You cannot deactivate your own account.");
+    }
+    await setUserActive(data.userId, data.active);
+    return { userId: data.userId, active: data.active };
+  });
+
+/** Admin-only: permanently delete a sign-in and its profile. */
+export const deleteTeamUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => userInput.parse(data))
+  .handler(async ({ data, context }) => {
+    await requireRole(
+      context.supabase,
+      context.userId,
+      ["admin"],
+      "Only administrators can delete users.",
+    );
+    if (data.userId === context.userId) {
+      throw new Error("You cannot delete your own account.");
+    }
+    await deleteUserAccount(data.userId);
     return { userId: data.userId };
   });
 

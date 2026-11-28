@@ -5,7 +5,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
 import { TASK_STATUSES } from "@/lib/format";
-import { signInEmail, USERNAME_PATTERN } from "@/lib/login-identifier";
+import { USERNAME_PATTERN } from "@/lib/login-identifier";
 import { ALL_MODULE_IDS } from "@/lib/permissions";
 import { callerRoles, createLoginUser, requireRole } from "@/lib/user-admin.server";
 
@@ -15,41 +15,22 @@ type SessionClient = SupabaseClient<Database>;
 const roleEnum = z.enum(["admin", "manager", "analyst", "viewer"]);
 const moduleEnum = z.enum(ALL_MODULE_IDS as [string, ...string[]]);
 const statusEnum = z.enum(TASK_STATUSES);
-const priorityEnum = z.enum(["Low", "Medium", "High", "Critical"]);
 
-const memberInput = z.object({
-  name: z.string().trim().min(2).max(120),
-  title: z.string().trim().min(2).max(120),
-  team: z.string().trim().min(2).max(80),
-  /** Optional: a username or work email is enough to reach this person. */
-  email: z.string().trim().max(255).optional(),
-  countryCode: z.string().trim().length(2).nullable(),
-  capacityHours: z.number().int().min(8).max(400),
-  managerId: z.number().int().positive().nullable(),
-  login: z
-    .object({
-      username: z
-        .string()
-        .trim()
-        .min(3)
-        .max(32)
-        .regex(USERNAME_PATTERN, "Use letters, numbers, dot, dash or underscore."),
-      password: z.string().min(8).max(72),
-      role: roleEnum,
-      modules: z.array(moduleEnum).min(1).max(ALL_MODULE_IDS.length),
-    })
-    .nullable(),
+const memberLoginInput = z.object({
+  fullName: z.string().trim().min(2).max(120),
+  username: z
+    .string()
+    .trim()
+    .min(3)
+    .max(32)
+    .regex(USERNAME_PATTERN, "Use letters, numbers, dot, dash or underscore."),
+  password: z.string().min(8).max(72),
+  role: roleEnum,
+  modules: z.array(moduleEnum).min(1).max(ALL_MODULE_IDS.length),
+  contactEmail: z.string().trim().max(255).optional(),
 });
 
-const taskInput = z.object({
-  memberId: z.number().int().positive(),
-  title: z.string().trim().min(3).max(160),
-  priority: priorityEnum,
-  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  status: statusEnum,
-  campaignId: z.number().int().positive().nullable(),
-  hoursLogged: z.number().min(0).max(999),
-});
+const loginRemovalInput = z.object({ userId: z.string().uuid() });
 
 const progressInput = z.object({
   taskId: z.number().int().positive(),
@@ -66,11 +47,6 @@ const decisionInput = z.object({
   taskId: z.number().int().positive(),
   approve: z.boolean(),
   note: z.string().trim().max(1000).optional(),
-});
-
-const removeInput = z.object({
-  memberId: z.number().int().positive(),
-  deleteLogin: z.boolean().optional(),
 });
 
 /** A database that has not run a later migration yet reports the column here. */
@@ -104,171 +80,55 @@ async function writeTask(supabase: SessionClient, taskId: number, patch: TaskPat
   }
 }
 
-/** Admin/manager: add a teammate to the performance roster (optionally with a login). */
-export const createTeamMember = createServerFn({ method: "POST" })
+/**
+ * Admin/manager: create the sign-in account for a roster row that the browser
+ * has already inserted.
+ *
+ * Only the auth account needs the server (it needs the service-role key). The
+ * roster insert, the task insert and the delete run in the browser under RLS,
+ * so they keep working on a deployment where server functions are proxied,
+ * blocked by CSRF or missing the service-role key.
+ */
+export const createMemberLogin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => memberInput.parse(data))
+  .inputValidator((data: unknown) => memberLoginInput.parse(data))
   .handler(async ({ data, context }) => {
     await requireRole(
       context.supabase,
       context.userId,
       ["admin", "manager"],
-      "Only administrators and managers can add team members.",
+      "Only administrators and managers can create sign-ins.",
     );
 
-    const internalEmail = data.login ? signInEmail(data.login.username) : "";
-    const payload = {
-      name: data.name,
-      title: data.title,
-      team: data.team,
-      email: data.email?.trim() || internalEmail,
-      country_code: data.countryCode,
-      capacity_hours: data.capacityHours,
-      manager_id: data.managerId,
-    };
+    const created = await createLoginUser({
+      username: data.username,
+      password: data.password,
+      fullName: data.fullName,
+      role: data.role,
+      modules: data.modules,
+      contactEmail: data.contactEmail,
+    });
 
-    let member: { id: number } | null = null;
-    const attempt = await context.supabase
-      .from("team_members")
-      .insert(payload)
-      .select("id")
-      .single();
-    if (!attempt.error && attempt.data) {
-      member = attempt.data;
-    } else {
-      const admin = await adminClient();
-      const retry = await admin.from("team_members").insert(payload).select("id").single();
-      if (retry.error || !retry.data) {
-        throw new Error(
-          retry.error?.message ?? attempt.error?.message ?? "Could not add the team member.",
-        );
-      }
-      member = retry.data;
-    }
-
-    if (!data.login) return { memberId: member.id, userId: null };
-
-    let userId: string;
-    try {
-      const created = await createLoginUser({
-        username: data.login.username,
-        password: data.login.password,
-        fullName: data.name,
-        role: data.login.role,
-        modules: data.login.modules,
-        contactEmail: data.email?.trim() || undefined,
-      });
-      userId = created.userId;
-    } catch (err) {
-      // Do not leave a roster row behind when the sign-in could not be created.
-      await context.supabase.from("team_members").delete().eq("id", member.id);
-      throw err;
-    }
-
-    // Ownership is decided by this link, not by comparing email addresses.
-    const linked = await context.supabase
-      .from("team_members")
-      .update({ user_id: userId })
-      .eq("id", member.id);
-    if (linked.error) {
-      const admin = await adminClient();
-      const retry = await admin.from("team_members").update({ user_id: userId }).eq("id", member.id);
-      if (retry.error) throw new Error(retry.error.message);
-    }
-
-    return { memberId: member.id, userId };
+    return { userId: created.userId, username: created.username };
   });
 
-/** Admin/manager: assign a task to a teammate. */
-export const assignTeamTask = createServerFn({ method: "POST" })
+/** Admin/manager: delete a sign-in account (used when removing a teammate). */
+export const deleteMemberLogin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => taskInput.parse(data))
+  .inputValidator((data: unknown) => loginRemovalInput.parse(data))
   .handler(async ({ data, context }) => {
     await requireRole(
       context.supabase,
       context.userId,
       ["admin", "manager"],
-      "Only administrators and managers can assign tasks.",
+      "Only administrators and managers can delete sign-ins.",
     );
-
-    const payload = {
-      member_id: data.memberId,
-      title: data.title,
-      priority: data.priority,
-      due_date: data.dueDate,
-      status: data.status,
-      campaign_id: data.campaignId,
-      hours_logged: data.hoursLogged,
-      progress_pct: data.status === "Done" ? 100 : 0,
-      completed_at: data.status === "Done" ? new Date().toISOString().slice(0, 10) : null,
-      updated_by: context.userId,
-    };
-
-    const attempt = await context.supabase.from("team_tasks").insert(payload).select("id").single();
-    if (!attempt.error && attempt.data) return { taskId: attempt.data.id };
 
     const admin = await adminClient();
-    const retry = await admin.from("team_tasks").insert(payload).select("id").single();
-    if (retry.error || !retry.data) {
-      throw new Error(retry.error?.message ?? attempt.error?.message ?? "Could not assign the task.");
-    }
-    return { taskId: retry.data.id };
-  });
+    const { error } = await admin.auth.admin.deleteUser(data.userId);
+    if (error) throw new Error(error.message);
 
-/** Admin/manager: remove a teammate (their tasks cascade) and optionally their sign-in. */
-export const removeTeamMember = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => removeInput.parse(data))
-  .handler(async ({ data, context }) => {
-    await requireRole(
-      context.supabase,
-      context.userId,
-      ["admin", "manager"],
-      "Only administrators and managers can remove team members.",
-    );
-
-    const { data: member, error: readError } = await context.supabase
-      .from("team_members")
-      .select("id, name, user_id")
-      .eq("id", data.memberId)
-      .maybeSingle();
-    if (readError) throw new Error(readError.message);
-    if (!member) throw new Error("That team member no longer exists.");
-
-    const attempt = await context.supabase
-      .from("team_members")
-      .delete()
-      .eq("id", member.id)
-      .select("id")
-      .maybeSingle();
-    if (attempt.error || !attempt.data) {
-      const admin = await adminClient();
-      const retry = await admin
-        .from("team_members")
-        .delete()
-        .eq("id", member.id)
-        .select("id")
-        .maybeSingle();
-      if (retry.error || !retry.data) {
-        throw new Error(retry.error?.message ?? attempt.error?.message ?? "Could not remove the member.");
-      }
-    }
-
-    if (data.deleteLogin && member.user_id) {
-      try {
-        const admin = await adminClient();
-        const { error } = await admin.auth.admin.deleteUser(member.user_id);
-        if (error) throw new Error(error.message);
-      } catch (err) {
-        throw new Error(
-          `${member.name} was removed from the team, but their sign-in could not be deleted: ${
-            err instanceof Error ? err.message : "unknown error"
-          }`,
-        );
-      }
-    }
-
-    return { memberId: member.id, name: member.name };
+    return { userId: data.userId };
   });
 
 /**

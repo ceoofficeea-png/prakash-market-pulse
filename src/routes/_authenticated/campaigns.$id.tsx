@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 
@@ -7,10 +7,10 @@ import { DataTable } from "@/components/app/data-table";
 import { DemoNote, DetailStat, LeadRestricted, LoadingBlock, PageHeader } from "@/components/app/page";
 import { StatusBadge } from "@/components/app/status-badge";
 import { Progress } from "@/components/ui/progress";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { totals, useContent, useCurrentUser, useLeads, useLookups, useMetrics, useSocialPosts, useTasks } from "@/lib/api";
-import { CAMPAIGN_STATUSES, fmtCompact, fmtDate, fmtNum, fmtPct, fmtUsd, platformColor, platformLabel, safeDiv, toISODate } from "@/lib/format";
+import { CAMPAIGN_NEXT_STATUS, fmtCompact, fmtDate, fmtDateTime, fmtNum, fmtPct, fmtUsd, platformColor, platformLabel, safeDiv, toISODate } from "@/lib/format";
 import { can, canReadLeads } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/campaigns/$id")({
@@ -42,14 +42,28 @@ function CampaignDetail() {
   const posts = useSocialPosts();
   const tasks = useTasks();
 
+  const statusHistory = useQuery({
+    queryKey: ["campaign-status-history", cid],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("campaign_status_history")
+        .select("id, previous_status, new_status, changed_by_name, changed_at")
+        .eq("campaign_id", cid)
+        .order("changed_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const setStatus = useMutation({
     mutationFn: async (status: string) => {
       const { error } = await supabase.from("campaigns").update({ status }).eq("id", cid);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Status updated");
+      toast.success("Campaign status updated");
       qc.invalidateQueries({ queryKey: ["campaigns"] });
+      qc.invalidateQueries({ queryKey: ["campaign-status-history", cid] });
     },
     onError: (e) => toast.error(e.message),
   });
@@ -62,6 +76,7 @@ function CampaignDetail() {
   const campaignLeads = (leads.data ?? []).filter((l) => l.campaign_id === cid);
   const canEdit = can(me.data?.roles ?? [], "campaigns.edit");
   const canRead = canReadLeads(me.data?.roles ?? []);
+  const nextStatus = CAMPAIGN_NEXT_STATUS[c.status];
 
   return (
     <>
@@ -72,10 +87,15 @@ function CampaignDetail() {
         description={c.description ?? undefined}
         actions={
           canEdit ? (
-            <Select value={c.status} onValueChange={(v) => setStatus.mutate(v)}>
-              <SelectTrigger className="h-8 w-36"><SelectValue /></SelectTrigger>
-              <SelectContent>{CAMPAIGN_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-            </Select>
+            nextStatus ? (
+              <Button size="sm" onClick={() => setStatus.mutate(nextStatus)} disabled={setStatus.isPending}>
+                {setStatus.isPending ? "Updating…" : `Move to ${nextStatus}`}
+              </Button>
+            ) : (
+              <span className="flex items-center gap-2 text-sm text-muted-foreground">
+                Campaign completed <StatusBadge value={c.status} />
+              </span>
+            )
           ) : (
             <StatusBadge value={c.status} />
           )
@@ -170,6 +190,32 @@ function CampaignDetail() {
       ) : (
         <LeadRestricted className="mt-6" />
       )}
+      <ChartCard title="Status history" subtitle="Forward-only lifecycle \u00b7 every change is logged" className="mt-6">
+        {statusHistory.isLoading ? (
+          <p className="text-sm text-muted-foreground">Loading\u2026</p>
+        ) : (statusHistory.data ?? []).length === 0 ? (
+          <p className="text-sm text-muted-foreground">No status change recorded yet.</p>
+        ) : (
+          <ol className="space-y-2 text-sm">
+            {(statusHistory.data ?? []).map((h) => (
+              <li key={h.id} className="flex flex-wrap items-center justify-between gap-2 rounded border border-border/60 px-2 py-1.5">
+                <span className="flex items-center gap-1.5">
+                  {h.previous_status ? (
+                    <>
+                      <StatusBadge value={h.previous_status} />
+                      <span className="text-muted-foreground">\u2192</span>
+                    </>
+                  ) : null}
+                  <StatusBadge value={h.new_status} />
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {h.changed_by_name ?? "System"} \u00b7 {fmtDateTime(h.changed_at)}
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </ChartCard>
       <DemoNote />
     </>
   );

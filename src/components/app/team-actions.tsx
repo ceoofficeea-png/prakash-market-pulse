@@ -30,7 +30,13 @@ import { useLookups, type TeamMember } from "@/lib/api";
 import { TASK_STATUSES } from "@/lib/format";
 import { isValidUsername } from "@/lib/login-identifier";
 import { GRANTABLE_MODULE_IDS, ROLES, type AppRole, type ModuleId } from "@/lib/permissions";
-import { assignTeamTask, createTeamMember, removeTeamMember } from "@/lib/team.functions";
+import { createMemberLogin, deleteMemberLogin } from "@/lib/team.functions";
+import {
+  deleteTeamMember,
+  insertTeamMember,
+  insertTeamTask,
+  linkTeamMemberUser,
+} from "@/lib/team-writes";
 
 const todayPlus = (days: number) => {
   const d = new Date();
@@ -50,7 +56,7 @@ const EMPTY_MEMBER = {
 /** Add a teammate to the roster, with an optional sign-in account. */
 export function AddTeammateDialog() {
   const qc = useQueryClient();
-  const create = useServerFn(createTeamMember);
+  const createLogin = useServerFn(createMemberLogin);
   const { team, countries } = useLookups();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -86,25 +92,36 @@ export function AddTeammateDialog() {
     setBusy(true);
     setError(null);
     try {
-      await create({
-        data: {
-          name: form.name.trim(),
-          title: form.title.trim(),
-          team: form.team.trim(),
-          email: form.email.trim(),
-          countryCode: form.countryCode || null,
-          capacityHours: Number(form.capacityHours) || 160,
-          managerId: managerId === "none" ? null : Number(managerId),
-          login: withLogin
-            ? {
-                username: login.username.trim(),
-                password: login.password,
-                role: login.role,
-                modules,
-              }
-            : null,
-        },
+      const memberId = await insertTeamMember({
+        name: form.name.trim(),
+        title: form.title.trim(),
+        team: form.team.trim(),
+        email: form.email.trim(),
+        countryCode: form.countryCode || null,
+        capacityHours: Number(form.capacityHours) || 160,
+        managerId: managerId === "none" ? null : Number(managerId),
       });
+
+      if (withLogin) {
+        try {
+          const created = await createLogin({
+            data: {
+              fullName: form.name.trim(),
+              username: login.username.trim(),
+              password: login.password,
+              role: login.role,
+              modules,
+              contactEmail: form.email.trim() || undefined,
+            },
+          });
+          await linkTeamMemberUser(memberId, created.userId);
+        } catch (loginError) {
+          // Do not leave a roster row behind when the sign-in could not be created.
+          await deleteTeamMember(memberId).catch(() => undefined);
+          throw loginError;
+        }
+      }
+
       toast.success(`${form.name.trim()} added to the team`);
       qc.invalidateQueries({ queryKey: ["team_members"] });
       qc.invalidateQueries({ queryKey: ["admin-users"] });
@@ -335,7 +352,7 @@ export function AssignTaskDialog({
   members: TeamMember[];
 }) {
   const qc = useQueryClient();
-  const create = useServerFn(assignTeamTask);
+
   const { campaigns } = useLookups();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -357,16 +374,14 @@ export function AssignTaskDialog({
     setBusy(true);
     setError(null);
     try {
-      await create({
-        data: {
-          memberId: Number(form.member),
-          title: form.title.trim(),
-          priority: form.priority as "Low" | "Medium" | "High" | "Critical",
-          dueDate: form.dueDate,
-          status: form.status as (typeof TASK_STATUSES)[number],
-          campaignId: campaignId === "none" ? null : Number(campaignId),
-          hoursLogged: 0,
-        },
+      await insertTeamTask({
+        memberId: Number(form.member),
+        title: form.title.trim(),
+        priority: form.priority as "Low" | "Medium" | "High" | "Critical",
+        dueDate: form.dueDate,
+        status: form.status as (typeof TASK_STATUSES)[number],
+        campaignId: campaignId === "none" ? null : Number(campaignId),
+        hoursLogged: 0,
       });
       toast.success("Task assigned");
       qc.invalidateQueries({ queryKey: ["team_tasks"] });
@@ -520,7 +535,7 @@ export function RemoveTeammateDialog({
   compact?: boolean;
 }) {
   const qc = useQueryClient();
-  const remove = useServerFn(removeTeamMember);
+  const removeLogin = useServerFn(deleteMemberLogin);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [deleteLogin, setDeleteLogin] = useState(false);
@@ -530,10 +545,24 @@ export function RemoveTeammateDialog({
     setBusy(true);
     setError(null);
     try {
-      await remove({ data: { memberId: member.id, deleteLogin } });
-      toast.success(`${member.name} removed from the team`);
+      await deleteTeamMember(member.id);
       qc.invalidateQueries({ queryKey: ["team_members"] });
       qc.invalidateQueries({ queryKey: ["team_tasks"] });
+
+      if (deleteLogin && member.user_id) {
+        try {
+          await removeLogin({ data: { userId: member.user_id } });
+        } catch (err) {
+          setOpen(false);
+          throw new Error(
+            `${member.name} was removed from the team, but their sign-in could not be deleted: ${
+              err instanceof Error ? err.message : "unknown error"
+            }`,
+          );
+        }
+      }
+
+      toast.success(`${member.name} removed from the team`);
       qc.invalidateQueries({ queryKey: ["admin-users"] });
       setOpen(false);
     } catch (err) {

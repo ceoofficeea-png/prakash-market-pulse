@@ -7,8 +7,12 @@ const TONES: Record<string, Tone> = {
   // campaigns
   Active: "success",
   Planned: "info",
+  Pause: "warning",
   Paused: "warning",
   Completed: "muted",
+  // account status
+  Pending: "warning",
+  Disabled: "danger",
   // leads
   New: "info",
   Contacted: "muted",
